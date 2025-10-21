@@ -1,0 +1,129 @@
+/* filepath: image-button-automation/src/css/style.css */
+/*-------------------------------------------General Styles---------------------------------------------*/
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+/*-------------------------------------------Upload Area Styles---------------------------------------------*/
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    background-color: #fafafa;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: #f0f8ff;
+}
+
+.upload-area.dragover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+/*-------------------------------------------Preview Styles---------------------------------------------*/
+.preview-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.preview-container-generated {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.button-overlay-wrapper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+.button-overlay {
+    position: relative;
+    width: 60%;
+    height: auto;
+    display: inline-block;
+    cursor: move;
+    animation: pulse 0.9s infinite linear;
+}
+
+/*-------------------------------------------Button Styles---------------------------------------------*/
+.redirect-btn {
+    position: absolute;
+    top: 83%; /* Adjusted button position */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.redirect-btn img {
+    width: 60%;
+    animation: pulse 0.9s infinite linear;
+}
+
+/*-------------------------------------------Keyframe Animation---------------------------------------------*/
+@keyframes pulse {
+    0% {
+        transform: scale(0.9);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(0.9);
+    }
+}
+
+/*-------------------------------------------Background Image---------------------------------------------*/
+#bg {
+    width: 100%;
+    height: auto;
+}
+
+/*-------------------------------------------Card Styles---------------------------------------------*/
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/*-------------------------------------------Form Styles---------------------------------------------*/
+.form-control, .form-range {
+    border-radius: 8px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/*-------------------------------------------Responsive Styles---------------------------------------------*/
+@media (min-width: 992px) {
+    .redirect-btn {
+        top: 83%; /* Maintain button position for larger screens */
+    }
+    
+    #bg {
+        height: 100vh;
+    }
+}

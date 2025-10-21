@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta name="description" content="">
+  <title>{{TITLE}}</title>
+  <link rel="preload" as="style" onload="this.onload=null; this.rel='stylesheet'" href="./css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+    integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    /*-------------------------------------------Background Image---------------------------------------------*/
+    #bg {
+        width: 100%;
+        height: auto;
+    }
+
+    /*-------------------------------------------Redirect Button---------------------------------------------*/
+    .redirect-btn {
+        top: {{BUTTON_POSITION}}%;
+    }
+
+    .redirect-btn img {
+        width: 60%;
+        animation: pulse 0.9s infinite linear;
+    }
+
+    /*-------------------------------------------Keyframe Animation---------------------------------------------*/
+    @keyframes pulse {
+        0% {
+            transform: scale(0.9);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        100% {
+            transform: scale(0.9);
+        }
+    }
+
+    /*-------------------------------------------Multi Device Screen Size---------------------------------------------*/
+    /* Large devices (desktops, 992px and up) */
+    @media (min-width: 992px) {
+        #bg {
+            height: 100vh;
+        }
+    }
+  </style>
+</head>
+<body>
+  <main class="d-lg-flex">
+    <section class="position-relative d-lg-inline-block mx-lg-auto">
+      <picture>
+        <source type="image/webp" srcset="./image/bg.webp">
+        <img src="./image/bg.jpg" id="bg" alt="bg">
+      </picture>
+
+      <div class="position-absolute w-100 text-center redirect-btn">
+        <a id="redirectLink" href="./assets/load.html">
+          <picture>
+            <source type="image/webp" srcset="./image/tombol/btn.webp">
+            <img src="./image/tombol/btn.png" id="tekan" alt="button">
+          </picture>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Get current URL
+      let currentURL = window.location.href;
+
+      // Check if URL contains parameters
+      if (currentURL.includes('?')) {
+        // Append all parameters to the redirect link
+        let redirectURL = "./assets/load.html?" + currentURL.split('?')[1];
+        $('#redirectLink').attr('href', redirectURL);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static LP Automation Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Static LP Automation Tool</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Upload & Configure</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Background Image Upload -->
+                        <div class="mb-3">
+                            <label class="form-label">Background Image</label>
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                <p>Click or drag background image here</p>
+                                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Button Image Upload -->
+                        <div class="mb-3">
+                            <label class="form-label">Button Image</label>
+                            <div class="upload-area" id="buttonUploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                <p>Click or drag button image here</p>
+                                <input type="file" id="buttonInput" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Title Input -->
+                        <div class="mb-3">
+                            <label for="titleInput" class="form-label">Page Title</label>
+                            <input type="text" class="form-control" id="titleInput" value="MEGA888" placeholder="Enter page title">
+                        </div>
+
+                        <!-- URL Input -->
+                        <div class="mb-3">
+                            <label for="urlInput" class="form-label">Redirect URL</label>
+                            <input type="url" class="form-control" id="urlInput" placeholder="https://example.com" required>
+                        </div>
+
+                        <!-- Facebook Pixel -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fbPixelCheck">
+                                <label class="form-check-label" for="fbPixelCheck">
+                                    Add Facebook Pixel
+                                </label>
+                            </div>
+                            <div id="fbPixelInputGroup" style="display: none;" class="mt-2">
+                                <input type="text" class="form-control" id="fbPixelId" placeholder="Enter Facebook Pixel ID (e.g., 123456789012345)">
+                                <small class="form-text text-muted">This will add Facebook Pixel tracking code to your pages</small>
+                            </div>
+                        </div>
+
+                        <!-- Button Position -->
+                        <div class="mb-3">
+                            <label for="buttonPosition" class="form-label">Button Position (Top %)</label>
+                            <input type="range" class="form-range" id="buttonPosition" min="0" max="100" value="83">
+                            <small class="form-text text-muted">Current: <span id="positionValue">83</span>%</small>
+                        </div>
+
+                        <!-- Button Width -->
+                        <div class="mb-3">
+                            <label for="buttonWidth" class="form-label">Button Width (%)</label>
+                            <input type="range" class="form-range" id="buttonWidth" min="20" max="80" value="60">
+                            <small class="form-text text-muted">Current: <span id="widthValue">60</span>%</small>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button class="btn btn-primary w-100" id="generateBtn">Generate Files</button>
+                        
+                        <!-- Generate Zip Button -->
+                        <button class="btn btn-success w-100 mt-2" id="generateZipBtn" style="display: none;">Download ZIP Package</button>
+                        <small class="text-muted mt-1 d-block" id="zipInfo" style="display: none;">
+                            <i class="fas fa-info-circle"></i> ZIP includes both JPG and WebP formats for optimal performance
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="previewArea" class="text-center">
+                            <p class="text-muted">Upload an image to see preview</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

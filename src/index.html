@@ -18,6 +18,21 @@
                         <h5>Upload & Configure</h5>
                     </div>
                     <div class="card-body">
+                        <!-- Zip File Upload Option -->
+                        <div class="mb-3">
+                            <label class="form-label">Quick Upload (Optional)</label>
+                            <div class="upload-area" id="zipUploadArea">
+                                <i class="fas fa-file-archive fa-3x mb-3"></i>
+                                <p>Upload ZIP file containing bg and btn images</p>
+                                <input type="file" id="zipInput" accept=".zip" style="display: none;">
+                            </div>
+                            <small class="text-muted">ZIP should contain bg.jpg/png and btn.jpg/png</small>
+                        </div>
+
+                        <div class="text-center my-3">
+                            <span class="text-muted">- OR -</span>
+                        </div>
+
                         <!-- Background Image Upload -->
                         <div class="mb-3">
                             <label class="form-label">Background Image</label>

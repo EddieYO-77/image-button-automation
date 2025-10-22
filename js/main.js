@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const imageInput = document.getElementById('imageInput');
     const buttonUploadArea = document.getElementById('buttonUploadArea');
     const buttonInput = document.getElementById('buttonInput');
+    const zipUploadArea = document.getElementById('zipUploadArea');
+    const zipInput = document.getElementById('zipInput');
     const titleInput = document.getElementById('titleInput');
     const urlInput = document.getElementById('urlInput');
     const buttonPosition = document.getElementById('buttonPosition');
@@ -25,10 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Upload area click handlers
     uploadArea.addEventListener('click', () => imageInput.click());
     buttonUploadArea.addEventListener('click', () => buttonInput.click());
+    zipUploadArea.addEventListener('click', () => zipInput.click());
 
     // File input change handlers
     imageInput.addEventListener('change', handleBackgroundUpload);
     buttonInput.addEventListener('change', handleButtonUpload);
+    zipInput.addEventListener('change', handleZipUpload);
 
     // Position slider handler
     buttonPosition.addEventListener('input', function() {
@@ -95,6 +99,173 @@ document.addEventListener('DOMContentLoaded', function() {
             handleButtonFile(files[0]);
         }
     });
+
+    // Zip upload drag and drop handlers
+    zipUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zipUploadArea.classList.add('dragover');
+    });
+
+    zipUploadArea.addEventListener('dragleave', () => {
+        zipUploadArea.classList.remove('dragover');
+    });
+
+    zipUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zipUploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].name.endsWith('.zip')) {
+            handleZipFile(files[0]);
+        }
+    });
+
+    function handleZipUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleZipFile(file);
+        }
+    }
+
+    async function handleZipFile(file) {
+        if (!file.name.endsWith('.zip')) {
+            alert('Please select a ZIP file');
+            return;
+        }
+
+        zipUploadArea.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Processing ZIP file...</p>
+        `;
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            
+            // Get the zip filename without extension for folder search
+            const zipName = file.name.replace('.zip', '');
+            
+            let bgFile = null;
+            let btnFile = null;
+            let bgFileName = '';
+            let btnFileName = '';
+
+            // First pass: Search in root level
+            for (const [filename, zipEntry] of Object.entries(zip.files)) {
+                if (zipEntry.dir) continue;
+                
+                const lowerFilename = filename.toLowerCase();
+                const baseName = filename.split('/').pop().toLowerCase();
+                
+                // Check for background image
+                if ((baseName === 'bg.jpg' || baseName === 'bg.png' || 
+                     baseName === 'bg.jpeg') && !filename.includes('/')) {
+                    bgFile = zipEntry;
+                    bgFileName = filename;
+                }
+                
+                // Check for button image
+                if ((baseName === 'btn.jpg' || baseName === 'btn.png' || 
+                     baseName === 'btn.jpeg') && !filename.includes('/')) {
+                    btnFile = zipEntry;
+                    btnFileName = filename;
+                }
+            }
+
+            // Second pass: If not found, search in folder with same name as zip
+            if (!bgFile || !btnFile) {
+                for (const [filename, zipEntry] of Object.entries(zip.files)) {
+                    if (zipEntry.dir) continue;
+                    
+                    const parts = filename.split('/');
+                    if (parts.length >= 2) {
+                        const folderName = parts[0].toLowerCase();
+                        const baseName = parts[parts.length - 1].toLowerCase();
+                        
+                        // Check if folder name matches zip name
+                        if (folderName === zipName.toLowerCase()) {
+                            // Check for background image
+                            if (!bgFile && (baseName === 'bg.jpg' || baseName === 'bg.png' || 
+                                baseName === 'bg.jpeg')) {
+                                bgFile = zipEntry;
+                                bgFileName = filename;
+                            }
+                            
+                            // Check for button image
+                            if (!btnFile && (baseName === 'btn.jpg' || baseName === 'btn.png' || 
+                                baseName === 'btn.jpeg')) {
+                                btnFile = zipEntry;
+                                btnFileName = filename;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check if both files were found
+            if (!bgFile || !btnFile) {
+                const missing = [];
+                if (!bgFile) missing.push('bg.jpg/png');
+                if (!btnFile) missing.push('btn.jpg/png');
+                
+                zipUploadArea.innerHTML = `
+                    <i class="fas fa-file-archive fa-3x mb-3 text-danger"></i>
+                    <p class="text-danger">Missing files: ${missing.join(', ')}</p>
+                    <small class="text-muted">ZIP should contain bg and btn images in root or in a folder named "${zipName}"</small>
+                `;
+                
+                // Reset input
+                zipInput.value = '';
+                return;
+            }
+
+            // Extract the images
+            const bgBlob = await bgFile.async('blob');
+            const btnBlob = await btnFile.async('blob');
+
+            // Convert to data URLs
+            const bgDataUrl = await blobToDataURL(bgBlob);
+            const btnDataUrl = await blobToDataURL(btnBlob);
+
+            // Set the uploaded images
+            uploadedImage = bgDataUrl;
+            uploadedImageName = bgFileName.split('/').pop();
+            uploadedButton = btnDataUrl;
+            uploadedButtonName = btnFileName.split('/').pop();
+
+            // Update the upload areas
+            uploadArea.innerHTML = `
+                <img src="${uploadedImage}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                <p class="mt-2 mb-0"><strong>Background uploaded from ZIP!</strong></p>
+                <small class="text-muted">${uploadedImageName}</small>
+            `;
+
+            buttonUploadArea.innerHTML = `
+                <img src="${uploadedButton}" style="max-width: 100%; max-height: 120px; border-radius: 8px;">
+                <p class="mt-2 mb-0"><strong>Button uploaded from ZIP!</strong></p>
+                <small class="text-muted">${uploadedButtonName}</small>
+            `;
+
+            zipUploadArea.innerHTML = `
+                <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                <p class="text-success"><strong>ZIP processed successfully!</strong></p>
+                <small class="text-muted">${file.name}</small>
+            `;
+
+            // Update preview
+            updatePreview();
+
+        } catch (error) {
+            console.error('Error processing ZIP file:', error);
+            zipUploadArea.innerHTML = `
+                <i class="fas fa-file-archive fa-3x mb-3 text-danger"></i>
+                <p class="text-danger">Error processing ZIP file</p>
+                <small class="text-muted">${error.message}</small>
+            `;
+            zipInput.value = '';
+        }
+    }
 
     function handleBackgroundUpload(e) {
         const file = e.target.files[0];
@@ -486,6 +657,18 @@ body {
             generateZipBtn.textContent = originalText;
             generateZipBtn.disabled = false;
         }
+    }
+
+    // Helper function to convert blob to data URL
+    function blobToDataURL(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                resolve(e.target.result);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
     }
 
     // Helper function to convert data URL to blob

@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const positionValue = document.getElementById('positionValue');
     const buttonWidth = document.getElementById('buttonWidth');
     const widthValue = document.getElementById('widthValue');
+    const buttonHorizontal = document.getElementById('buttonHorizontal');
+    const horizontalValue = document.getElementById('horizontalValue');
     const extraButtonCheck = document.getElementById('extraButtonCheck');
     const extraButtonGroup = document.getElementById('extraButtonGroup');
     const extraButtonUploadArea = document.getElementById('extraButtonUploadArea');
@@ -23,9 +25,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const extraPositionValue = document.getElementById('extraPositionValue');
     const extraButtonWidth = document.getElementById('extraButtonWidth');
     const extraWidthValue = document.getElementById('extraWidthValue');
+    const extraButtonHorizontal = document.getElementById('extraButtonHorizontal');
+    const extraHorizontalValue = document.getElementById('extraHorizontalValue');
     const fbPixelCheck = document.getElementById('fbPixelCheck');
     const fbPixelInputGroup = document.getElementById('fbPixelInputGroup');
     const fbPixelId = document.getElementById('fbPixelId');
+    const zipFilename = document.getElementById('zipFilename');
     const generateBtn = document.getElementById('generateBtn');
     const previewArea = document.getElementById('previewArea');
 
@@ -38,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let uploadedElements = []; // Array to store additional elements
     let generatedFiles = {};
     let previewIntervals = []; // Store intervals for preview sliders
+    let guideFiles = []; // Store guide folder files (images/videos)
 
     // Upload area click handlers
     uploadArea.addEventListener('click', () => imageInput.click());
@@ -65,6 +71,19 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePreview();
     });
 
+    // Button horizontal position slider handler
+    buttonHorizontal.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value === 0) {
+            horizontalValue.textContent = 'Center';
+        } else if (value < 0) {
+            horizontalValue.textContent = `${Math.abs(value)}% from Right`;
+        } else {
+            horizontalValue.textContent = `${value}% from Left`;
+        }
+        updatePreview();
+    });
+
     // Extra button checkbox handler
     extraButtonCheck.addEventListener('change', function() {
         if (this.checked) {
@@ -86,6 +105,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Extra button width slider handler
     extraButtonWidth.addEventListener('input', function() {
         extraWidthValue.textContent = this.value;
+        updatePreview();
+    });
+
+    // Extra button horizontal position slider handler
+    extraButtonHorizontal.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value === 0) {
+            extraHorizontalValue.textContent = 'Center';
+        } else if (value < 0) {
+            extraHorizontalValue.textContent = `${Math.abs(value)}% from Right`;
+        } else {
+            extraHorizontalValue.textContent = `${value}% from Left`;
+        }
         updatePreview();
     });
 
@@ -468,13 +500,25 @@ document.addEventListener('DOMContentLoaded', function() {
             let bgFileName = '';
             let btnFileName = '';
             let additionalFiles = []; // Store additional element images
+            let guideFilesTemp = []; // Store guide folder files
 
             // First pass: Search in root level
             for (const [filename, zipEntry] of Object.entries(zip.files)) {
                 if (zipEntry.dir) continue;
+                if (filename.startsWith('__MACOSX/')) continue; // Ignore macOS metadata folder
                 
                 const lowerFilename = filename.toLowerCase();
                 const baseName = filename.split('/').pop().toLowerCase();
+                if (baseName.startsWith('._')) continue; // Ignore macOS resource fork files
+                
+                // Check for guide folder
+                if (lowerFilename.includes('guide/') || lowerFilename.includes('guide\\')) {
+                    const ext = baseName.split('.').pop();
+                    if (['jpg', 'jpeg', 'png', 'mp4'].includes(ext)) {
+                        guideFilesTemp.push({ file: zipEntry, name: filename, baseName: baseName });
+                    }
+                    continue; // Skip other processing for guide files
+                }
                 
                 // Check for background image
                 if ((baseName === 'bg.jpg' || baseName === 'bg.png' || 
@@ -499,11 +543,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!bgFile || !btnFile) {
                 for (const [filename, zipEntry] of Object.entries(zip.files)) {
                     if (zipEntry.dir) continue;
+                    if (filename.startsWith('__MACOSX/')) continue;
                     
                     const parts = filename.split('/');
                     if (parts.length >= 2) {
                         const folderName = parts[0].toLowerCase();
                         const baseName = parts[parts.length - 1].toLowerCase();
+                        if (baseName.startsWith('._')) continue;
+                        
+                        // Skip guide folder processing in second pass (already handled in first pass)
+                        if (folderName.includes('guide') || parts.some(p => p.toLowerCase() === 'guide')) {
+                            continue;
+                        }
                         
                         // Check if folder name matches zip name
                         if (folderName === zipName.toLowerCase()) {
@@ -602,10 +653,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderElementControls();
             }
 
+            // Process guide files - Remove duplicates by filename
+            if (guideFilesTemp.length > 0) {
+                // Deduplicate by baseName
+                const uniqueGuideFiles = [];
+                const seenNames = new Set();
+                
+                for (const guideFile of guideFilesTemp) {
+                    if (!seenNames.has(guideFile.baseName)) {
+                        seenNames.add(guideFile.baseName);
+                        uniqueGuideFiles.push(guideFile);
+                    }
+                }
+                
+                guideFiles = [];
+                for (let i = 0; i < uniqueGuideFiles.length; i++) {
+                    const guideFile = uniqueGuideFiles[i];
+                    const blob = await guideFile.file.async('blob');
+                    const ext = guideFile.baseName.split('.').pop();
+                    const isVideo = ext === 'mp4';
+                    
+                    if (isVideo) {
+                        // For videos, create a blob URL
+                        const blobUrl = URL.createObjectURL(blob);
+                        guideFiles.push({
+                            type: 'video',
+                            url: blobUrl,
+                            name: guideFile.baseName
+                        });
+                    } else {
+                        // For images, convert to data URL
+                        const dataUrl = await blobToDataURL(blob);
+                        guideFiles.push({
+                            type: 'image',
+                            url: dataUrl,
+                            name: guideFile.baseName
+                        });
+                    }
+                }
+                
+                // Display guide files
+                displayGuideFiles();
+            }
+
             zipUploadArea.innerHTML = `
                 <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
                 <p class="text-success"><strong>ZIP processed successfully!</strong></p>
-                <small class="text-muted">${file.name}${additionalFiles.length > 0 ? ` (+${additionalFiles.length} element${additionalFiles.length > 1 ? 's' : ''})` : ''}</small>
+                <small class="text-muted">${file.name}${additionalFiles.length > 0 ? ` (+${additionalFiles.length} element${additionalFiles.length > 1 ? 's' : ''})` : ''}${guideFiles.length > 0 ? ` (+${guideFiles.length} guide file${guideFiles.length > 1 ? 's' : ''})` : ''}</small>
             `;
 
             // Update preview
@@ -620,6 +714,43 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             zipInput.value = '';
         }
+    }
+
+    function displayGuideFiles() {
+        const guideContainer = document.getElementById('guidePreviewArea');
+        if (!guideContainer) return;
+
+        if (guideFiles.length === 0) {
+            guideContainer.innerHTML = '<p class="text-muted">No guide files found</p>';
+            return;
+        }
+
+        let guideHTML = '<div class="guide-files-container">';
+        guideHTML += '<h6 class="mb-3"><i class="fas fa-book"></i> Guide Files</h6>';
+        
+        guideFiles.forEach((file, index) => {
+            if (file.type === 'video') {
+                guideHTML += `
+                    <div class="guide-item guide-video mb-3">
+                        <video loop autoplay muted playsinline style="width: 100%; max-height: 300px; border-radius: 8px;">
+                            <source src="${file.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <small class="d-block mt-1 text-muted">${file.name}</small>
+                    </div>
+                `;
+            } else {
+                guideHTML += `
+                    <div class="guide-item guide-image mb-3">
+                        <img src="${file.url}" alt="${file.name}" style="width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open('${file.url}', '_blank')">
+                        <small class="d-block mt-1 text-muted">${file.name}</small>
+                    </div>
+                `;
+            }
+        });
+        
+        guideHTML += '</div>';
+        guideContainer.innerHTML = guideHTML;
     }
 
     function handleBackgroundUpload(e) {
@@ -648,9 +779,14 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadedImage = e.target.result;
             updatePreview();
             uploadArea.innerHTML = `
-                <img src="${uploadedImage}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
-                <p class="mt-2 mb-0"><strong>Background uploaded successfully!</strong></p>
-                <small class="text-muted">${file.name}</small>
+                <div class="uploaded-preview">
+                    <img src="${uploadedImage}" alt="Background preview">
+                    <div class="upload-overlay">
+                        <i class="fas fa-check-circle"></i>
+                        <p>Background uploaded</p>
+                        <small>${file.name}</small>
+                    </div>
+                </div>
             `;
         };
         reader.readAsDataURL(file);
@@ -668,9 +804,14 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadedButton = e.target.result;
             updatePreview();
             buttonUploadArea.innerHTML = `
-                <img src="${uploadedButton}" style="max-width: 100%; max-height: 120px; border-radius: 8px;">
-                <p class="mt-2 mb-0"><strong>Button uploaded successfully!</strong></p>
-                <small class="text-muted">${file.name}</small>
+                <div class="uploaded-preview">
+                    <img src="${uploadedButton}" alt="Button preview">
+                    <div class="upload-overlay">
+                        <i class="fas fa-check-circle"></i>
+                        <p>Button uploaded</p>
+                        <small>${file.name}</small>
+                    </div>
+                </div>
             `;
         };
         reader.readAsDataURL(file);
@@ -695,9 +836,14 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadedExtraButton = e.target.result;
             updatePreview();
             extraButtonUploadArea.innerHTML = `
-                <img src="${uploadedExtraButton}" style="max-width: 100%; max-height: 120px; border-radius: 8px;">
-                <p class="mt-2 mb-0"><strong>Extra button uploaded successfully!</strong></p>
-                <small class="text-muted">${file.name}</small>
+                <div class="uploaded-preview">
+                    <img src="${uploadedExtraButton}" alt="Extra button preview">
+                    <div class="upload-overlay">
+                        <i class="fas fa-check-circle"></i>
+                        <p>Extra button uploaded</p>
+                        <small>${file.name}</small>
+                    </div>
+                </div>
             `;
         };
         reader.readAsDataURL(file);
@@ -708,11 +854,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const position = buttonPosition.value;
         const width = buttonWidth.value;
+        const horizontal = buttonHorizontal.value;
+        
+        // Calculate horizontal position style
+        const offset = Math.abs(horizontal);
+        let horizontalStyle = '';
+        if (horizontal < 0) {
+            // Negative = move to left side, so use RIGHT property
+            horizontalStyle = `right: ${offset}%;`;
+        } else if (horizontal > 0) {
+            // Positive = move to right side, so use LEFT property
+            horizontalStyle = `left: ${offset}%;`;
+        }
+        // If horizontal == 0, no additional positioning needed (centered by default)
+        
         let buttonDisplay = '';
         
         if (uploadedButton) {
             buttonDisplay = `
-                <div class="position-absolute w-100 text-center redirect-btn" style="top: ${position}%;">
+                <div class="position-absolute w-100 text-center redirect-btn" style="top: ${position}%; ${horizontalStyle}">
                     <img src="${uploadedButton}" style="width: ${width}%; animation: pulse 0.9s infinite linear;" alt="Button Preview">
                 </div>`;
         } else {
@@ -724,19 +884,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             `)}`;
             buttonDisplay = `
-                <div class="position-absolute w-100 text-center redirect-btn" style="top: ${position}%;">
+                <div class="position-absolute w-100 text-center redirect-btn" style="top: ${position}%; ${horizontalStyle}">
                     <img src="${buttonSvg}" style="width: ${width}%; animation: pulse 0.9s infinite linear;" alt="Button Preview">
                 </div>`;
         }
-        
         
         // Extra button display
         let extraButtonDisplay = '';
         if (extraButtonCheck.checked && uploadedExtraButton) {
             const extraPosition = extraButtonPosition.value;
             const extraWidth = extraButtonWidth.value;
+            const extraHorizontal = extraButtonHorizontal.value;
+            
+            // Calculate extra button horizontal position style
+            const extraOffset = Math.abs(extraHorizontal);
+            let extraHorizontalStyle = '';
+            if (extraHorizontal < 0) {
+                // Negative = move to left side, so use RIGHT property
+                extraHorizontalStyle = `right: ${extraOffset}%;`;
+            } else if (extraHorizontal > 0) {
+                // Positive = move to right side, so use LEFT property
+                extraHorizontalStyle = `left: ${extraOffset}%;`;
+            }
+            
             extraButtonDisplay = `
-                <div class="position-absolute w-100 text-center extra-redirect-btn" style="top: ${extraPosition}%;">
+                <div class="position-absolute w-100 text-center extra-redirect-btn" style="top: ${extraPosition}%; ${extraHorizontalStyle}">
                     <img src="${uploadedExtraButton}" style="width: ${extraWidth}%; animation: pulse 0.9s infinite linear;" alt="Extra Button Preview">
                 </div>`;
         }
@@ -845,10 +1017,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const redirectUrl = urlInput.value;
         const position = buttonPosition.value;
         const width = buttonWidth.value;
+        const horizontal = buttonHorizontal.value;
         const extraButtonEnabled = extraButtonCheck.checked;
         const extraRedirectUrl = extraButtonEnabled ? extraButtonUrl.value : '';
         const extraPosition = extraButtonEnabled ? extraButtonPosition.value : 70;
         const extraWidth = extraButtonEnabled ? extraButtonWidth.value : 60;
+        const extraHorizontal = extraButtonEnabled ? extraButtonHorizontal.value : 0;
         const includeFbPixel = fbPixelCheck.checked;
         const pixelId = includeFbPixel ? fbPixelId.value.trim() : '';
 
@@ -866,17 +1040,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // Generate all required files
             const generatedFiles = {
-                'Lindex.html': generateMainHTML(title, position, width, './assets/load.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra.html'),
-                'L1.html': generateMainHTML(title, position, width, './assets/load1.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra1.html'),
-                'L2.html': generateMainHTML(title, position, width, './assets/load2.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra2.html'),
-                'L3.html': generateMainHTML(title, position, width, './assets/load3.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra3.html'),
-                'L4.html': generateMainHTML(title, position, width, './assets/load4.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra4.html'),
+                'Lindex.html': generateMainHTML(title, position, width, horizontal, './assets/load.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra.html'),
+                'L1.html': generateMainHTML(title, position, width, horizontal, './assets/load1.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra1.html'),
+                'L2.html': generateMainHTML(title, position, width, horizontal, './assets/load2.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra2.html'),
+                'L3.html': generateMainHTML(title, position, width, horizontal, './assets/load3.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra3.html'),
+                'L4.html': generateMainHTML(title, position, width, horizontal, './assets/load4.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra4.html'),
                 'assets/load.html': generateLoadHTML(redirectUrl),
                 'assets/load1.html': generateLoadHTML(redirectUrl),
                 'assets/load2.html': generateLoadHTML(redirectUrl),
                 'assets/load3.html': generateLoadHTML(redirectUrl),
                 'assets/load4.html': generateLoadHTML(redirectUrl),
-                'css/style.css': generateStyleCSS(position, width, extraButtonEnabled, extraPosition, extraWidth),
+                'css/style.css': generateStyleCSS(position, width, horizontal, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal),
             };
 
             // Add extra button load files if enabled
@@ -991,7 +1165,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const url = window.URL.createObjectURL(content);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'image-button-automation-package.zip';
+            
+            // Get custom filename from input, sanitize it, and add .zip extension
+            let customFilename = zipFilename.value.trim();
+            // Remove any .zip extension if user added it
+            customFilename = customFilename.replace(/\.zip$/i, '');
+            // Sanitize filename - remove invalid characters
+            customFilename = customFilename.replace(/[^a-z0-9_-]/gi, '-');
+            // Use default if empty
+            if (!customFilename) {
+                customFilename = 'landing-page-package';
+            }
+            
+            a.download = customFilename + '.zip';
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -1051,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return scripts;
     }
 
-    function generateMainHTML(title, position, width, loadPath, fbPixelId = '', extraButtonEnabled = false, extraPosition = 70, extraWidth = 60, extraLoadPath = '') {
+    function generateMainHTML(title, position, width, horizontal, loadPath, fbPixelId = '', extraButtonEnabled = false, extraPosition = 70, extraWidth = 60, extraHorizontal = 0, extraLoadPath = '') {
         const fbPixelCode = fbPixelId ? `
   <!-- Facebook Pixel Code -->
   <script>
@@ -1222,7 +1408,25 @@ ${generateMultiImageScripts()}
 </html>`;
     }
 
-    function generateStyleCSS(position, width, extraButtonEnabled = false, extraPosition = 70, extraWidth = 60) {
+    function generateStyleCSS(position, width, horizontal, extraButtonEnabled = false, extraPosition = 70, extraWidth = 60, extraHorizontal = 0) {
+        // Calculate horizontal position styles
+        const offset = Math.abs(horizontal);
+        let horizontalCSS = '';
+        if (horizontal < 0) {
+            horizontalCSS = `right: ${offset}%;`;
+        } else if (horizontal > 0) {
+            horizontalCSS = `left: ${offset}%;`;
+        }
+        
+        // Calculate extra button horizontal position styles
+        const extraOffset = Math.abs(extraHorizontal);
+        let extraHorizontalCSS = '';
+        if (extraHorizontal < 0) {
+            extraHorizontalCSS = `right: ${extraOffset}%;`;
+        } else if (extraHorizontal > 0) {
+            extraHorizontalCSS = `left: ${extraOffset}%;`;
+        }
+        
         return `/* filepath: css/style.css */
 /*-------------------------------------------General Styles---------------------------------------------*/
 body {
@@ -1242,6 +1446,7 @@ body {
 .redirect-btn {
     position: absolute;
     top: ${position}%;
+    ${horizontalCSS}
 }
 
 .redirect-btn img {
@@ -1253,6 +1458,7 @@ ${extraButtonEnabled ? `
 .extra-redirect-btn {
     position: absolute;
     top: ${extraPosition}%;
+    ${extraHorizontalCSS}
 }
 
 .extra-redirect-btn img {

@@ -7,15 +7,17 @@ body {
     background-color: #f4f4f4;
 }
 
-/*-------------------------------------------Upload Area Styles---------------------------------------------*/
+/* Upload area styling */
 .upload-area {
     border: 2px dashed #ccc;
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 40px;
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, background-color 0.3s;
     background-color: #fafafa;
+    position: relative;
+    overflow: hidden;
 }
 
 .upload-area:hover {
@@ -25,7 +27,51 @@ body {
 
 .upload-area.dragover {
     border-color: #007bff;
-    background-color: #e3f2fd;
+    background-color: #e7f3ff;
+}
+
+/* Uploaded preview styling */
+.uploaded-preview {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploaded-preview img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.upload-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 123, 255, 0.9), transparent);
+    padding: 15px 10px 10px;
+    color: white;
+    text-align: center;
+}
+
+.upload-overlay i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.upload-overlay p {
+    margin: 5px 0 2px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.upload-overlay small {
+    font-size: 0.75rem;
+    opacity: 0.9;
 }
 
 /*-------------------------------------------Element Controls Styles---------------------------------------------*/
@@ -42,6 +88,42 @@ body {
     margin-bottom: 0.25rem;
 }
 
+/*-------------------------------------------Guide Files Styles---------------------------------------------*/
+.guide-files-container {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.guide-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fafafa;
+    transition: box-shadow 0.3s;
+}
+
+.guide-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.guide-item img {
+    transition: transform 0.2s;
+}
+
+.guide-item img:hover {
+    transform: scale(1.02);
+}
+
+.guide-item video {
+    background-color: #000;
+}
+
+#guidePreviewArea {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/*-------------------------------------------Multi Image Container Styles---------------------------------------------*/
 .multi-image-container {
     position: relative;
     display: inline-block;
@@ -95,7 +177,8 @@ body {
 
 /* Fixed preview on scroll */
 @media (min-width: 768px) {
-    .col-md-6:has(#previewArea) {
+    .col-md-4:has(#previewArea),
+    .col-md-3:has(#guidePreviewArea) {
         position: sticky;
         top: 20px;
         align-self: flex-start;
@@ -126,8 +209,6 @@ body {
 .redirect-btn {
     position: absolute;
     top: 83%; /* Adjusted button position */
-    left: 50%;
-    transform: translateX(-50%);
 }
 
 .redirect-btn img {

@@ -28,6 +28,57 @@ body {
     background-color: #e3f2fd;
 }
 
+/*-------------------------------------------Element Controls Styles---------------------------------------------*/
+#elementsContainer .card {
+    background-color: #f8f9fa;
+}
+
+#elementsContainer .form-range {
+    cursor: pointer;
+}
+
+#elementsContainer .small {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.multi-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.multi-image-container img {
+    width: 100%;
+    height: auto;
+}
+
+.multi-image-container img:first-child {
+    position: relative;
+    display: block;
+}
+
+.multi-image-container img:not(:first-child) {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.multi-image-container img:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.multi-image-container img:nth-child(2) {
+    animation-delay: 2s;
+}
+
+.multi-image-container img:nth-child(3) {
+    animation-delay: 4s;
+}
+
+.multi-image-container img:nth-child(4) {
+    animation-delay: 6s;
+}
+
 /*-------------------------------------------Preview Styles---------------------------------------------*/
 .preview-container {
     position: relative;
@@ -40,6 +91,17 @@ body {
     position: relative;
     display: inline-block;
     max-width: 100%;
+}
+
+/* Fixed preview on scroll */
+@media (min-width: 768px) {
+    .col-md-6:has(#previewArea) {
+        position: sticky;
+        top: 20px;
+        align-self: flex-start;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
 }
 
 .button-overlay-wrapper {
@@ -86,6 +148,165 @@ body {
     100% {
         transform: scale(0.9);
     }
+}
+
+@keyframes moveNorthWest {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(-30px, -30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveNorthEast {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(30px, -30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveSouthEast {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(30px, 30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveSouthWest {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(-30px, 30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes imageSwitchPulse {
+    0%, 24% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    25%, 49% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50%, 74% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    75%, 99% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes imageSwitchSlide {
+    0%, 24% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    25%, 49% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    50%, 74% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    75%, 99% {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Multi-image slider animations */
+@keyframes zoomOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.exit-animation {
+    animation: zoomOut 0.5s ease-out forwards;
+}
+
+.add-animation-zoom {
+    animation: zoomIn 0.5s ease-in forwards;
+}
+
+.add-animation {
+    animation: slideIn 0.5s ease-in forwards;
 }
 
 /*-------------------------------------------Background Image---------------------------------------------*/

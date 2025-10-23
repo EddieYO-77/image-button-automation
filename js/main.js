@@ -5,34 +5,53 @@ document.addEventListener('DOMContentLoaded', function() {
     const buttonInput = document.getElementById('buttonInput');
     const zipUploadArea = document.getElementById('zipUploadArea');
     const zipInput = document.getElementById('zipInput');
+    const elementUploadArea = document.getElementById('elementUploadArea');
+    const elementInput = document.getElementById('elementInput');
+    const elementsContainer = document.getElementById('elementsContainer');
     const titleInput = document.getElementById('titleInput');
     const urlInput = document.getElementById('urlInput');
     const buttonPosition = document.getElementById('buttonPosition');
     const positionValue = document.getElementById('positionValue');
     const buttonWidth = document.getElementById('buttonWidth');
     const widthValue = document.getElementById('widthValue');
+    const extraButtonCheck = document.getElementById('extraButtonCheck');
+    const extraButtonGroup = document.getElementById('extraButtonGroup');
+    const extraButtonUploadArea = document.getElementById('extraButtonUploadArea');
+    const extraButtonInput = document.getElementById('extraButtonInput');
+    const extraButtonUrl = document.getElementById('extraButtonUrl');
+    const extraButtonPosition = document.getElementById('extraButtonPosition');
+    const extraPositionValue = document.getElementById('extraPositionValue');
+    const extraButtonWidth = document.getElementById('extraButtonWidth');
+    const extraWidthValue = document.getElementById('extraWidthValue');
     const fbPixelCheck = document.getElementById('fbPixelCheck');
     const fbPixelInputGroup = document.getElementById('fbPixelInputGroup');
     const fbPixelId = document.getElementById('fbPixelId');
     const generateBtn = document.getElementById('generateBtn');
-    const generateZipBtn = document.getElementById('generateZipBtn');
     const previewArea = document.getElementById('previewArea');
 
     let uploadedImage = null;
     let uploadedImageName = 'bg.jpg';
     let uploadedButton = null;
     let uploadedButtonName = 'btn.jpg';
+    let uploadedExtraButton = null;
+    let uploadedExtraButtonName = 'btn2.jpg';
+    let uploadedElements = []; // Array to store additional elements
     let generatedFiles = {};
+    let previewIntervals = []; // Store intervals for preview sliders
 
     // Upload area click handlers
     uploadArea.addEventListener('click', () => imageInput.click());
     buttonUploadArea.addEventListener('click', () => buttonInput.click());
     zipUploadArea.addEventListener('click', () => zipInput.click());
+    elementUploadArea.addEventListener('click', () => elementInput.click());
+    extraButtonUploadArea.addEventListener('click', () => extraButtonInput.click());
 
     // File input change handlers
     imageInput.addEventListener('change', handleBackgroundUpload);
     buttonInput.addEventListener('change', handleButtonUpload);
     zipInput.addEventListener('change', handleZipUpload);
+    elementInput.addEventListener('change', handleElementUpload);
+    extraButtonInput.addEventListener('change', handleExtraButtonUpload);
 
     // Position slider handler
     buttonPosition.addEventListener('input', function() {
@@ -46,6 +65,30 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePreview();
     });
 
+    // Extra button checkbox handler
+    extraButtonCheck.addEventListener('change', function() {
+        if (this.checked) {
+            extraButtonGroup.style.display = 'block';
+        } else {
+            extraButtonGroup.style.display = 'none';
+            uploadedExtraButton = null;
+            extraButtonUrl.value = '';
+        }
+        updatePreview();
+    });
+
+    // Extra button position slider handler
+    extraButtonPosition.addEventListener('input', function() {
+        extraPositionValue.textContent = this.value;
+        updatePreview();
+    });
+
+    // Extra button width slider handler
+    extraButtonWidth.addEventListener('input', function() {
+        extraWidthValue.textContent = this.value;
+        updatePreview();
+    });
+
     // Facebook Pixel checkbox handler
     fbPixelCheck.addEventListener('change', function() {
         if (this.checked) {
@@ -56,12 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Generate button handler
-    generateBtn.addEventListener('click', generateFiles);
+    // Generate button handler - now combines generate and download
+    generateBtn.addEventListener('click', generateAndDownloadZip);
     
-    // Generate zip button handler
-    generateZipBtn.addEventListener('click', generateZipPackage);
-
     // Background image drag and drop handlers
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -100,6 +140,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Extra button image drag and drop handlers
+    extraButtonUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        extraButtonUploadArea.classList.add('dragover');
+    });
+
+    extraButtonUploadArea.addEventListener('dragleave', () => {
+        extraButtonUploadArea.classList.remove('dragover');
+    });
+
+    extraButtonUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        extraButtonUploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleExtraButtonFile(files[0]);
+        }
+    });
+
     // Zip upload drag and drop handlers
     zipUploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -118,6 +177,264 @@ document.addEventListener('DOMContentLoaded', function() {
             handleZipFile(files[0]);
         }
     });
+
+    // Element upload drag and drop handlers
+    elementUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        elementUploadArea.classList.add('dragover');
+    });
+
+    elementUploadArea.addEventListener('dragleave', () => {
+        elementUploadArea.classList.remove('dragover');
+    });
+
+    elementUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        elementUploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleElementFiles(files);
+        }
+    });
+
+    function handleElementUpload(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleElementFiles(files);
+        }
+    }
+
+    function handleElementFiles(files) {
+        Array.from(files).forEach((file, index) => {
+            if (!file.type.startsWith('image/')) {
+                alert(`File ${file.name} is not an image`);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const elementId = uploadedElements.length + 1;
+                const element = {
+                    id: elementId,
+                    name: `element${elementId}`,
+                    fileName: file.name,
+                    dataUrl: e.target.result,
+                    width: 30,
+                    top: 50,
+                    left: 0,  // 0 means centered, negative = move left, positive = move right
+                    right: 0,  // Not used anymore, keeping for compatibility
+                    animation: 'none',  // Animation option: none, pulse, moveNorthWest, moveNorthEast, moveSouthEast, moveSouthWest
+                    multiImage: false,  // Whether this element uses multiple images
+                    images: [e.target.result],  // Array to store multiple images
+                    switchAnimation: 'pulse'  // pulse or slide
+                };
+                
+                uploadedElements.push(element);
+                renderElementControls();
+                updatePreview();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderElementControls() {
+        elementsContainer.innerHTML = '';
+        
+        uploadedElements.forEach((element, index) => {
+            const elementCard = document.createElement('div');
+            elementCard.className = 'card mb-2';
+            elementCard.innerHTML = `
+                <div class="card-body p-2">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="${element.dataUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
+                        <div class="flex-grow-1">
+                            <strong>${element.name}</strong>
+                            <small class="d-block text-muted">${element.fileName}</small>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="removeElement(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small">Width (%)</label>
+                            <input type="range" class="form-range" min="5" max="100" value="${element.width}" 
+                                onchange="updateElementProperty(${index}, 'width', this.value)">
+                            <small class="text-muted">${element.width}%</small>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Top (%)</label>
+                            <input type="range" class="form-range" min="0" max="100" value="${element.top}" 
+                                onchange="updateElementProperty(${index}, 'top', this.value)">
+                            <small class="text-muted">${element.top}%</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Horizontal Position (%)</label>
+                            <input type="range" class="form-range" min="-50" max="50" value="${element.left}" 
+                                onchange="updateElementProperty(${index}, 'left', this.value)">
+                            <small class="text-muted">
+                                ${element.left == 0 ? 'Center' : element.left < 0 ? `${Math.abs(element.left)}% from Right` : `${element.left}% from Left`}
+                            </small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Animation</label>
+                            <select class="form-select form-select-sm" onchange="updateElementProperty(${index}, 'animation', this.value)" ${element.multiImage ? 'disabled' : ''}>
+                                <option value="none" ${element.animation === 'none' ? 'selected' : ''}>None</option>
+                                <option value="pulse" ${element.animation === 'pulse' ? 'selected' : ''}>Pulse</option>
+                                <option value="moveNorthWest" ${element.animation === 'moveNorthWest' ? 'selected' : ''}>Move North West</option>
+                                <option value="moveNorthEast" ${element.animation === 'moveNorthEast' ? 'selected' : ''}>Move North East</option>
+                                <option value="moveSouthEast" ${element.animation === 'moveSouthEast' ? 'selected' : ''}>Move South East</option>
+                                <option value="moveSouthWest" ${element.animation === 'moveSouthWest' ? 'selected' : ''}>Move South West</option>
+                            </select>
+                            ${element.multiImage ? '<small class="text-muted">Disabled when multi-image is enabled</small>' : ''}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="multiImage${index}" 
+                                    ${element.multiImage ? 'checked' : ''} 
+                                    onchange="toggleMultiImage(${index}, this.checked)">
+                                <label class="form-check-label small" for="multiImage${index}">
+                                    Enable Multi-Image Switch
+                                </label>
+                            </div>
+                        </div>
+                        ${element.multiImage ? `
+                        <div class="col-12" id="multiImageControls${index}">
+                            <label class="form-label small">Switch Animation</label>
+                            <select class="form-select form-select-sm mb-2" onchange="updateElementProperty(${index}, 'switchAnimation', this.value)">
+                                <option value="pulse" ${element.switchAnimation === 'pulse' ? 'selected' : ''}>Pulse</option>
+                                <option value="slide" ${element.switchAnimation === 'slide' ? 'selected' : ''}>Slide</option>
+                            </select>
+                            <label class="form-label small">Images (${element.images.length}/4)</label>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                ${element.images.map((img, imgIdx) => `
+                                    <div class="position-relative" style="width: 40px; height: 40px;">
+                                        <img src="${img}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 2px solid #007bff;">
+                                        ${element.images.length > 1 ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                            style="padding: 0; width: 16px; height: 16px; font-size: 10px; line-height: 1;" 
+                                            onclick="removeElementImage(${index}, ${imgIdx})">×</button>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${element.images.length < 4 ? `
+                            <div class="upload-area-small" id="addImageArea${index}" style="border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; background-color: #fafafa; transition: border-color 0.3s;">
+                                <i class="fas fa-plus"></i> Add Image (${element.images.length}/4)
+                                <p style="font-size: 11px; margin: 5px 0 0 0; color: #6c757d;">Click or drag image here</p>
+                            </div>
+                            <input type="file" id="elementImageInput${index}" accept="image/*" style="display: none;">
+                            ` : '<small class="text-muted">Maximum 4 images reached</small>'}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            elementsContainer.appendChild(elementCard);
+        });
+
+        // Add drag and drop event listeners for add image areas
+        uploadedElements.forEach((element, index) => {
+            if (element.multiImage && element.images.length < 4) {
+                const addImageArea = document.getElementById(`addImageArea${index}`);
+                if (addImageArea) {
+                    // Click to upload
+                    addImageArea.addEventListener('click', () => addElementImage(index));
+                    
+                    // Drag and drop
+                    addImageArea.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        addImageArea.style.borderColor = '#007bff';
+                        addImageArea.style.backgroundColor = '#e3f2fd';
+                    });
+                    
+                    addImageArea.addEventListener('dragleave', () => {
+                        addImageArea.style.borderColor = '#ccc';
+                        addImageArea.style.backgroundColor = '#fafafa';
+                    });
+                    
+                    addImageArea.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        addImageArea.style.borderColor = '#ccc';
+                        addImageArea.style.backgroundColor = '#fafafa';
+                        
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0 && files[0].type.startsWith('image/')) {
+                            handleAddElementImage(index, files[0]);
+                        } else {
+                            alert('Please drop an image file');
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Make these functions global so they can be called from onclick handlers
+    window.removeElement = function(index) {
+        uploadedElements.splice(index, 1);
+        // Rename remaining elements
+        uploadedElements.forEach((el, idx) => {
+            el.id = idx + 1;
+            el.name = `element${idx + 1}`;
+        });
+        renderElementControls();
+        updatePreview();
+    };
+
+    window.updateElementProperty = function(index, property, value) {
+        uploadedElements[index][property] = value;
+        renderElementControls();
+        updatePreview();
+    };
+
+    window.toggleMultiImage = function(index, enabled) {
+        uploadedElements[index].multiImage = enabled;
+        if (!enabled) {
+            // Keep only the first image when disabling
+            uploadedElements[index].images = [uploadedElements[index].images[0]];
+            uploadedElements[index].dataUrl = uploadedElements[index].images[0];
+        }
+        renderElementControls();
+        updatePreview();
+    };
+
+    window.addElementImage = function(index) {
+        const input = document.getElementById(`elementImageInput${index}`);
+        if (!input) return;
+        
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            handleAddElementImage(index, file);
+        };
+        input.click();
+    };
+
+    // Helper function to handle adding element image from both click and drag
+    function handleAddElementImage(index, file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            if (uploadedElements[index].images.length < 4) {
+                uploadedElements[index].images.push(evt.target.result);
+                renderElementControls();
+                updatePreview();
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    window.removeElementImage = function(index, imgIndex) {
+        if (uploadedElements[index].images.length > 1) {
+            uploadedElements[index].images.splice(imgIndex, 1);
+            uploadedElements[index].dataUrl = uploadedElements[index].images[0];
+            renderElementControls();
+            updatePreview();
+        }
+    };
 
     function handleZipUpload(e) {
         const file = e.target.files[0];
@@ -150,6 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let btnFile = null;
             let bgFileName = '';
             let btnFileName = '';
+            let additionalFiles = []; // Store additional element images
 
             // First pass: Search in root level
             for (const [filename, zipEntry] of Object.entries(zip.files)) {
@@ -164,12 +482,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     bgFile = zipEntry;
                     bgFileName = filename;
                 }
-                
                 // Check for button image
-                if ((baseName === 'btn.jpg' || baseName === 'btn.png' || 
+                else if ((baseName === 'btn.jpg' || baseName === 'btn.png' || 
                      baseName === 'btn.jpeg') && !filename.includes('/')) {
                     btnFile = zipEntry;
                     btnFileName = filename;
+                }
+                // Check for other image files (additional elements)
+                else if ((baseName.endsWith('.jpg') || baseName.endsWith('.png') || 
+                         baseName.endsWith('.jpeg')) && !filename.includes('/')) {
+                    additionalFiles.push({ file: zipEntry, name: filename });
                 }
             }
 
@@ -191,12 +513,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                 bgFile = zipEntry;
                                 bgFileName = filename;
                             }
-                            
                             // Check for button image
-                            if (!btnFile && (baseName === 'btn.jpg' || baseName === 'btn.png' || 
+                            else if (!btnFile && (baseName === 'btn.jpg' || baseName === 'btn.png' || 
                                 baseName === 'btn.jpeg')) {
                                 btnFile = zipEntry;
                                 btnFileName = filename;
+                            }
+                            // Check for other image files (additional elements)
+                            else if ((baseName.endsWith('.jpg') || baseName.endsWith('.png') || 
+                                     baseName.endsWith('.jpeg'))) {
+                                additionalFiles.push({ file: zipEntry, name: filename });
                             }
                         }
                     }
@@ -247,10 +573,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 <small class="text-muted">${uploadedButtonName}</small>
             `;
 
+            // Process additional images as elements
+            if (additionalFiles.length > 0) {
+                for (let i = 0; i < additionalFiles.length; i++) {
+                    const additionalFile = additionalFiles[i];
+                    const blob = await additionalFile.file.async('blob');
+                    const dataUrl = await blobToDataURL(blob);
+                    const fileName = additionalFile.name.split('/').pop();
+                    
+                    // Add to elements array
+                    const elementId = uploadedElements.length + 1;
+                    uploadedElements.push({
+                        id: elementId,
+                        name: `element${elementId}`,
+                        fileName: fileName,
+                        dataUrl: dataUrl,
+                        width: 50,
+                        top: 50,
+                        left: 0,
+                        animation: 'none',
+                        multiImage: false,
+                        images: [dataUrl],
+                        switchAnimation: 'pulse'
+                    });
+                }
+                
+                // Render element controls
+                renderElementControls();
+            }
+
             zipUploadArea.innerHTML = `
                 <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
                 <p class="text-success"><strong>ZIP processed successfully!</strong></p>
-                <small class="text-muted">${file.name}</small>
+                <small class="text-muted">${file.name}${additionalFiles.length > 0 ? ` (+${additionalFiles.length} element${additionalFiles.length > 1 ? 's' : ''})` : ''}</small>
             `;
 
             // Update preview
@@ -321,6 +676,33 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsDataURL(file);
     }
 
+    function handleExtraButtonUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleExtraButtonFile(file);
+        }
+    }
+
+    function handleExtraButtonFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        uploadedExtraButtonName = file.name;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedExtraButton = e.target.result;
+            updatePreview();
+            extraButtonUploadArea.innerHTML = `
+                <img src="${uploadedExtraButton}" style="max-width: 100%; max-height: 120px; border-radius: 8px;">
+                <p class="mt-2 mb-0"><strong>Extra button uploaded successfully!</strong></p>
+                <small class="text-muted">${file.name}</small>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+
     function updatePreview() {
         if (!uploadedImage) return;
 
@@ -347,15 +729,91 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>`;
         }
         
+        
+        // Extra button display
+        let extraButtonDisplay = '';
+        if (extraButtonCheck.checked && uploadedExtraButton) {
+            const extraPosition = extraButtonPosition.value;
+            const extraWidth = extraButtonWidth.value;
+            extraButtonDisplay = `
+                <div class="position-absolute w-100 text-center extra-redirect-btn" style="top: ${extraPosition}%;">
+                    <img src="${uploadedExtraButton}" style="width: ${extraWidth}%; animation: pulse 0.9s infinite linear;" alt="Extra Button Preview">
+                </div>`;
+        }
+
+        // Generate elements display
+        let elementsDisplay = '';
+        uploadedElements.forEach(element => {
+            const offset = Math.abs(element.left);
+            let positionStyle = '';
+            
+            if (element.left < 0) {
+                // Negative = move to left, so use RIGHT property
+                positionStyle = `right: ${offset}%;`;
+            } else if (element.left > 0) {
+                // Positive = move to right, so use LEFT property
+                positionStyle = `left: ${offset}%;`;
+            }
+            // If element.left == 0, no additional positioning needed (centered by default)
+            
+            if (element.multiImage && element.images.length > 1) {
+                // Multi-image element - use JavaScript-based switching
+                elementsDisplay += `
+                <div class="position-absolute w-100 text-center element-preview-slider-${element.id}" style="top: ${element.top}%; ${positionStyle}">
+                    <img src="${element.images[0]}" id="previewSlider${element.id}" class="element-slider-img" style="width: ${element.width}%;" alt="${element.name}">
+                </div>`;
+            } else {
+                // Single image element with regular animation
+                const animationStyle = element.animation !== 'none' ? `animation: ${element.animation} 0.9s infinite linear;` : '';
+                
+                elementsDisplay += `
+                <div class="position-absolute w-100 text-center" style="top: ${element.top}%; ${positionStyle}">
+                    <img src="${element.dataUrl}" style="width: ${element.width}%; height: auto; ${animationStyle}" alt="${element.name}">
+                </div>`;
+            }
+        });
+
         previewArea.innerHTML = `
             <div class="preview-container-generated position-relative d-inline-block">
                 <img src="${uploadedImage}" style="width: 100%; height: auto; display: block;" id="bg" alt="bg">
+                ${elementsDisplay}
                 ${buttonDisplay}
+                ${extraButtonDisplay}
             </div>
         `;
+
+        // Clear existing intervals
+        previewIntervals.forEach(interval => clearInterval(interval));
+        previewIntervals = [];
+
+        // Initialize sliders for multi-image elements
+        uploadedElements.forEach(element => {
+            if (element.multiImage && element.images.length > 1) {
+                const animClass = element.switchAnimation === 'pulse' ? 'add-animation-zoom' : 'add-animation';
+                const exitClass = 'exit-animation';
+                let currentIndex = 0;
+                const images = element.images;
+
+                const interval = setInterval(() => {
+                    currentIndex = (currentIndex + 1) % images.length;
+                    const imgElement = document.getElementById(`previewSlider${element.id}`);
+                    if (imgElement) {
+                        imgElement.classList.remove(animClass);
+                        imgElement.classList.add(exitClass);
+                        setTimeout(() => {
+                            imgElement.src = images[currentIndex];
+                            imgElement.classList.remove(exitClass);
+                            imgElement.classList.add(animClass);
+                        }, 50);
+                    }
+                }, 3000);
+
+                previewIntervals.push(interval);
+            }
+        });
     }
 
-    function generateFiles() {
+    async function generateAndDownloadZip() {
         if (!uploadedImage) {
             alert('Please upload a background image first');
             return;
@@ -371,10 +829,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const title = titleInput.value || 'MEGA888';
+        // Validate extra button if enabled
+        if (extraButtonCheck.checked) {
+            if (!uploadedExtraButton) {
+                alert('Please upload an extra button image or uncheck the extra button option');
+                return;
+            }
+            if (!extraButtonUrl.value) {
+                alert('Please enter a redirect URL for the extra button');
+                return;
+            }
+        }
+
+        const title = titleInput.value || 'HOME';
         const redirectUrl = urlInput.value;
         const position = buttonPosition.value;
         const width = buttonWidth.value;
+        const extraButtonEnabled = extraButtonCheck.checked;
+        const extraRedirectUrl = extraButtonEnabled ? extraButtonUrl.value : '';
+        const extraPosition = extraButtonEnabled ? extraButtonPosition.value : 70;
+        const extraWidth = extraButtonEnabled ? extraButtonWidth.value : 60;
         const includeFbPixel = fbPixelCheck.checked;
         const pixelId = includeFbPixel ? fbPixelId.value.trim() : '';
 
@@ -384,27 +858,200 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Generate all required files
-        generatedFiles = {
-            'Lindex.html': generateMainHTML(title, position, width, './assets/load.html', pixelId),
-            'L1.html': generateMainHTML(title, position, width, './assets/load1.html', pixelId),
-            'L2.html': generateMainHTML(title, position, width, './assets/load2.html', pixelId),
-            'L3.html': generateMainHTML(title, position, width, './assets/load3.html', pixelId),
-            'L4.html': generateMainHTML(title, position, width, './assets/load4.html', pixelId),
-            'assets/load.html': generateLoadHTML(redirectUrl),
-            'assets/load1.html': generateLoadHTML(redirectUrl),
-            'assets/load2.html': generateLoadHTML(redirectUrl),
-            'assets/load3.html': generateLoadHTML(redirectUrl),
-            'assets/load4.html': generateLoadHTML(redirectUrl),
-            'css/style.css': generateStyleCSS(position, width),
-        };
+        // Show loading state
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating ZIP...';
+        generateBtn.disabled = true;
 
-        // Show zip button
-        generateZipBtn.style.display = 'block';
-        document.getElementById('zipInfo').style.display = 'block';
+        try {
+            // Generate all required files
+            const generatedFiles = {
+                'Lindex.html': generateMainHTML(title, position, width, './assets/load.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra.html'),
+                'L1.html': generateMainHTML(title, position, width, './assets/load1.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra1.html'),
+                'L2.html': generateMainHTML(title, position, width, './assets/load2.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra2.html'),
+                'L3.html': generateMainHTML(title, position, width, './assets/load3.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra3.html'),
+                'L4.html': generateMainHTML(title, position, width, './assets/load4.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, './assets/loadExtra4.html'),
+                'assets/load.html': generateLoadHTML(redirectUrl),
+                'assets/load1.html': generateLoadHTML(redirectUrl),
+                'assets/load2.html': generateLoadHTML(redirectUrl),
+                'assets/load3.html': generateLoadHTML(redirectUrl),
+                'assets/load4.html': generateLoadHTML(redirectUrl),
+                'css/style.css': generateStyleCSS(position, width, extraButtonEnabled, extraPosition, extraWidth),
+            };
+
+            // Add extra button load files if enabled
+            if (extraButtonEnabled) {
+                generatedFiles['assets/loadExtra.html'] = generateLoadHTML(extraRedirectUrl);
+                generatedFiles['assets/loadExtra1.html'] = generateLoadHTML(extraRedirectUrl);
+                generatedFiles['assets/loadExtra2.html'] = generateLoadHTML(extraRedirectUrl);
+                generatedFiles['assets/loadExtra3.html'] = generateLoadHTML(extraRedirectUrl);
+                generatedFiles['assets/loadExtra4.html'] = generateLoadHTML(extraRedirectUrl);
+            }
+
+            // Create ZIP package
+            const zip = new JSZip();
+
+            // Add HTML files
+            zip.file('Lindex.html', generatedFiles['Lindex.html']);
+            zip.file('L1.html', generatedFiles['L1.html']);
+            zip.file('L2.html', generatedFiles['L2.html']);
+            zip.file('L3.html', generatedFiles['L3.html']);
+            zip.file('L4.html', generatedFiles['L4.html']);
+
+            // Add assets folder
+            const assetsFolder = zip.folder('assets');
+            assetsFolder.file('load.html', generatedFiles['assets/load.html']);
+            assetsFolder.file('load1.html', generatedFiles['assets/load1.html']);
+            assetsFolder.file('load2.html', generatedFiles['assets/load2.html']);
+            assetsFolder.file('load3.html', generatedFiles['assets/load3.html']);
+            assetsFolder.file('load4.html', generatedFiles['assets/load4.html']);
+
+            // Add extra button load files if exists
+            if (generatedFiles['assets/loadExtra.html']) {
+                assetsFolder.file('loadExtra.html', generatedFiles['assets/loadExtra.html']);
+                assetsFolder.file('loadExtra1.html', generatedFiles['assets/loadExtra1.html']);
+                assetsFolder.file('loadExtra2.html', generatedFiles['assets/loadExtra2.html']);
+                assetsFolder.file('loadExtra3.html', generatedFiles['assets/loadExtra3.html']);
+                assetsFolder.file('loadExtra4.html', generatedFiles['assets/loadExtra4.html']);
+            }
+
+            // Add image folder
+            const imageFolder = zip.folder('image');
+            
+            // Convert base64 images to blobs and add to zip
+            if (uploadedImage) {
+                const bgBlob = await dataURLtoBlob(uploadedImage);
+                imageFolder.file('bg.jpg', bgBlob);
+                
+                // Convert background image to WebP
+                const bgWebP = await convertToWebP(uploadedImage, 0.8);
+                const bgWebPBlob = await webpDataURLtoBlob(bgWebP);
+                imageFolder.file('bg.webp', bgWebPBlob);
+            }
+            
+            if (uploadedButton) {
+                // Create tombol subfolder for button images
+                const tombolFolder = imageFolder.folder('tombol');
+                
+                const btnBlob = await dataURLtoBlob(uploadedButton);
+                tombolFolder.file('btn.jpg', btnBlob);
+                
+                // Convert button image to WebP
+                const btnWebP = await convertToWebP(uploadedButton, 0.8);
+                const btnWebPBlob = await webpDataURLtoBlob(btnWebP);
+                tombolFolder.file('btn.webp', btnWebPBlob);
+
+                // Add extra button if exists
+                if (uploadedExtraButton) {
+                    const btn2Blob = await dataURLtoBlob(uploadedExtraButton);
+                    tombolFolder.file('btn2.jpg', btn2Blob);
+                    
+                    // Convert extra button image to WebP
+                    const btn2WebP = await convertToWebP(uploadedExtraButton, 0.8);
+                    const btn2WebPBlob = await webpDataURLtoBlob(btn2WebP);
+                    tombolFolder.file('btn2.webp', btn2WebPBlob);
+                }
+            }
+
+            // Add element images
+            if (uploadedElements.length > 0) {
+                const elementsFolder = imageFolder.folder('elements');
+                
+                for (const element of uploadedElements) {
+                    if (element.multiImage && element.images.length > 1) {
+                        // Multi-image element - save all images
+                        for (let i = 0; i < element.images.length; i++) {
+                            const imgBlob = await dataURLtoBlob(element.images[i]);
+                            elementsFolder.file(`${element.name}_${i + 1}.jpg`, imgBlob);
+                            
+                            // Convert to WebP
+                            const imgWebP = await convertToWebP(element.images[i], 0.8);
+                            const imgWebPBlob = await webpDataURLtoBlob(imgWebP);
+                            elementsFolder.file(`${element.name}_${i + 1}.webp`, imgWebPBlob);
+                        }
+                    } else {
+                        // Single image element
+                        const elemBlob = await dataURLtoBlob(element.dataUrl);
+                        elementsFolder.file(`${element.name}.jpg`, elemBlob);
+                        
+                        // Convert element image to WebP
+                        const elemWebP = await convertToWebP(element.dataUrl, 0.8);
+                        const elemWebPBlob = await webpDataURLtoBlob(elemWebP);
+                        elementsFolder.file(`${element.name}.webp`, elemWebPBlob);
+                    }
+                }
+            }
+
+            // Add CSS folder
+            const cssFolder = zip.folder('css');
+            cssFolder.file('style.css', generatedFiles['css/style.css']);
+
+            // Generate and download zip
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = window.URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'image-button-automation-package.zip';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Show success message
+            generateBtn.innerHTML = '<i class="fas fa-check"></i> ZIP Downloaded Successfully!';
+            setTimeout(() => {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error generating zip:', error);
+            alert('Error generating zip file. Please try again.');
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+        }
     }
 
-    function generateMainHTML(title, position, width, loadPath, fbPixelId = '') {
+    function generateMultiImageScripts() {
+        let scripts = '';
+        
+        uploadedElements.forEach(element => {
+            if (element.multiImage && element.images.length > 1) {
+                const animClass = element.switchAnimation === 'pulse' ? 'add-animation-zoom' : 'add-animation';
+                const exitClass = 'exit-animation';
+                
+                // Generate image paths array
+                const imagePaths = element.images.map((img, idx) => 
+                    `'./image/elements/${element.name}_${idx + 1}.jpg'`
+                ).join(', ');
+                
+                scripts += `
+      // Slider for ${element.name}
+      var images${element.id} = [${imagePaths}];
+      var currentIndex${element.id} = 0;
+
+      function changeImage${element.id}() {
+        currentIndex${element.id} = (currentIndex${element.id} + 1) % images${element.id}.length;
+        $('#slider${element.id}').removeClass('${animClass}');
+        $('#slider${element.id}').addClass('${exitClass}');
+        setTimeout(function () {
+          $('#slider${element.id}').attr('src', images${element.id}[currentIndex${element.id}]);
+          var webpSrc = images${element.id}[currentIndex${element.id}].replace('.jpg', '.webp');
+          $('#slider${element.id}').prev('source').attr('srcset', webpSrc);
+          $('#slider${element.id}').removeClass('${exitClass}');
+          $('#slider${element.id}').addClass('${animClass}');
+        }, 50);
+      }
+
+      setInterval(changeImage${element.id}, 3000);
+`;
+            }
+        });
+        
+        return scripts;
+    }
+
+    function generateMainHTML(title, position, width, loadPath, fbPixelId = '', extraButtonEnabled = false, extraPosition = 70, extraWidth = 60, extraLoadPath = '') {
         const fbPixelCode = fbPixelId ? `
   <!-- Facebook Pixel Code -->
   <script>
@@ -424,6 +1071,44 @@ document.addEventListener('DOMContentLoaded', function() {
   /></noscript>
   <!-- End Facebook Pixel Code -->` : '';
 
+        // Generate elements HTML
+        let elementsHTML = '';
+        uploadedElements.forEach(element => {
+            const offset = Math.abs(element.left);
+            let positionStyle = '';
+            
+            if (element.left < 0) {
+                // Negative = move to left, so use RIGHT property
+                positionStyle = `right: ${offset}%;`;
+            } else if (element.left > 0) {
+                // Positive = move to right, so use LEFT property
+                positionStyle = `left: ${offset}%;`;
+            }
+            // If element.left == 0, no additional positioning needed (centered by default)
+            
+            if (element.multiImage && element.images.length > 1) {
+                // Multi-image element - use JavaScript-based switching
+                elementsHTML += `
+      <div class="position-absolute w-100 text-center element-slider-${element.id}" style="top: ${element.top}%; ${positionStyle}">
+        <picture>
+          <source type="image/webp" srcset="./image/elements/${element.name}_1.webp">
+          <img src="./image/elements/${element.name}_1.jpg" id="slider${element.id}" class="element-slider-img" style="width: ${element.width}%;" alt="${element.name}">
+        </picture>
+      </div>`;
+            } else {
+                // Single image element with regular animation
+                const animationStyle = element.animation !== 'none' ? `animation: ${element.animation} 0.9s infinite linear;` : '';
+                
+                elementsHTML += `
+      <div class="position-absolute w-100 text-center" style="top: ${element.top}%; ${positionStyle}">
+        <picture>
+          <source type="image/webp" srcset="./image/elements/${element.name}.webp">
+          <img src="./image/elements/${element.name}.jpg" style="width: ${element.width}%; ${animationStyle}" alt="${element.name}">
+        </picture>
+      </div>`;
+            }
+        });
+
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -438,12 +1123,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </head>
 <body>
   <main class="d-lg-flex">
-    <section class="position-relative d-lg-inline-block mx-lg-auto">
+    <section class="position-relative d-lg-inline-block mx-lg-auto overflow-hidden">
       <picture>
         <source type="image/webp" srcset="./image/bg.webp">
         <img src="./image/bg.jpg" id="bg" alt="bg">
       </picture>
-
+${elementsHTML}
       <div class="position-absolute w-100 text-center redirect-btn">
         <a id="redirectLink" href="${loadPath}">
           <picture>
@@ -451,7 +1136,15 @@ document.addEventListener('DOMContentLoaded', function() {
             <img src="./image/tombol/btn.jpg" id="tekan" alt="button">
           </picture>
         </a>
-      </div>
+      </div>${extraButtonEnabled ? `
+      <div class="position-absolute w-100 text-center extra-redirect-btn">
+        <a id="extraRedirectLink" href="${extraLoadPath}">
+          <picture>
+            <source type="image/webp" srcset="./image/tombol/btn2.webp">
+            <img src="./image/tombol/btn2.jpg" id="tekan2" alt="extra button">
+          </picture>
+        </a>
+      </div>` : ''}
     </section>
   </main>
 
@@ -465,8 +1158,15 @@ document.addEventListener('DOMContentLoaded', function() {
       if (currentURL.includes('?')) {
         // Append all parameters to the redirect link
         let redirectURL = "${loadPath}?" + currentURL.split('?')[1];
-        $('#redirectLink').attr('href', redirectURL);
+        $('#redirectLink').attr('href', redirectURL);${extraButtonEnabled ? `
+        
+        // Append parameters to extra button redirect link
+        let extraRedirectURL = "${extraLoadPath}?" + currentURL.split('?')[1];
+        $('#extraRedirectLink').attr('href', extraRedirectURL);` : ''}
       }
+
+      // Multi-image slider functionality
+${generateMultiImageScripts()}
     });
   </script>
 </body>
@@ -522,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </html>`;
     }
 
-    function generateStyleCSS(position,width) {
+    function generateStyleCSS(position, width, extraButtonEnabled = false, extraPosition = 70, extraWidth = 60) {
         return `/* filepath: css/style.css */
 /*-------------------------------------------General Styles---------------------------------------------*/
 body {
@@ -548,7 +1248,18 @@ body {
     width: ${width}%;
     animation: pulse 0.9s infinite linear;
 }
+${extraButtonEnabled ? `
+/*-------------------------------------------Extra Redirect Button---------------------------------------------*/
+.extra-redirect-btn {
+    position: absolute;
+    top: ${extraPosition}%;
+}
 
+.extra-redirect-btn img {
+    width: ${extraWidth}%;
+    animation: pulse 0.9s infinite linear;
+}
+` : ''}
 /*-------------------------------------------Keyframe Animation---------------------------------------------*/
 @keyframes pulse {
     0% {
@@ -564,6 +1275,202 @@ body {
     }
 }
 
+@keyframes moveNorthWest {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(-30px, -30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveNorthEast {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(30px, -30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveSouthEast {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(30px, 30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes moveSouthWest {
+    0% {
+        transform: translate(0, 0);
+    }
+    
+    50% {
+        transform: translate(-30px, 30px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes imageSwitchPulse {
+    0%, 24% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    25%, 49% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50%, 74% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    75%, 99% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes imageSwitchSlide {
+    0%, 24% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    25%, 49% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    50%, 74% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    75%, 99% {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Multi-image slider animations */
+@keyframes zoomOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.exit-animation {
+    animation: zoomOut 0.5s ease-out forwards;
+}
+
+.add-animation-zoom {
+    animation: zoomIn 0.5s ease-in forwards;
+}
+
+.add-animation {
+    animation: slideIn 0.5s ease-in forwards;
+}
+
+.multi-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.multi-image-container img {
+    width: 100%;
+    height: auto;
+}
+
+.multi-image-container img:first-child {
+    position: relative;
+    display: block;
+}
+
+.multi-image-container img:not(:first-child) {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.multi-image-container img:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.multi-image-container img:nth-child(2) {
+    animation-delay: 2s;
+}
+
+.multi-image-container img:nth-child(3) {
+    animation-delay: 4s;
+}
+
+.multi-image-container img:nth-child(4) {
+    animation-delay: 6s;
+}
+
 /*-------------------------------------------Multi Device Screen Size---------------------------------------------*/
 /* Large devices (desktops, 992px and up) */
 @media (min-width: 992px) {
@@ -571,92 +1478,6 @@ body {
         height: 100vh;
     }
 }`;
-    }
-
-    async function generateZipPackage() {
-        if (!generatedFiles || Object.keys(generatedFiles).length === 0) {
-            alert('Please generate files first');
-            return;
-        }
-
-        // Show loading state
-        const originalText = generateZipBtn.textContent;
-        generateZipBtn.textContent = 'Generating ZIP with WebP conversion...';
-        generateZipBtn.disabled = true;
-
-        try {
-            const zip = new JSZip();
-
-            // Add HTML files
-            zip.file('Lindex.html', generatedFiles['Lindex.html']);
-            zip.file('L1.html', generatedFiles['L1.html']);
-            zip.file('L2.html', generatedFiles['L2.html']);
-            zip.file('L3.html', generatedFiles['L3.html']);
-            zip.file('L4.html', generatedFiles['L4.html']);
-
-            // Add assets folder
-            const assetsFolder = zip.folder('assets');
-            assetsFolder.file('load.html', generatedFiles['assets/load.html']);
-            assetsFolder.file('load1.html', generatedFiles['assets/load1.html']);
-            assetsFolder.file('load2.html', generatedFiles['assets/load2.html']);
-            assetsFolder.file('load3.html', generatedFiles['assets/load3.html']);
-            assetsFolder.file('load4.html', generatedFiles['assets/load4.html']);
-
-            // Add image folder
-            const imageFolder = zip.folder('image');
-            
-            // Convert base64 images to blobs and add to zip
-            if (uploadedImage) {
-                const bgBlob = await dataURLtoBlob(uploadedImage);
-                imageFolder.file('bg.jpg', bgBlob);
-                
-                // Convert background image to WebP
-                const bgWebP = await convertToWebP(uploadedImage, 0.8);
-                const bgWebPBlob = await webpDataURLtoBlob(bgWebP);
-                imageFolder.file('bg.webp', bgWebPBlob);
-            }
-            
-            if (uploadedButton) {
-                // Create tombol subfolder for button images
-                const tombolFolder = imageFolder.folder('tombol');
-                
-                const btnBlob = await dataURLtoBlob(uploadedButton);
-                tombolFolder.file('btn.jpg', btnBlob);
-                
-                // Convert button image to WebP
-                const btnWebP = await convertToWebP(uploadedButton, 0.8);
-                const btnWebPBlob = await webpDataURLtoBlob(btnWebP);
-                tombolFolder.file('btn.webp', btnWebPBlob);
-            }
-
-            // Add CSS folder
-            const cssFolder = zip.folder('css');
-            cssFolder.file('style.css', generatedFiles['css/style.css']);
-
-            // Generate and download zip
-            const content = await zip.generateAsync({ type: 'blob' });
-            const url = window.URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'image-button-automation-package.zip';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            // Show success message
-            generateZipBtn.textContent = 'ZIP Downloaded Successfully!';
-            setTimeout(() => {
-                generateZipBtn.textContent = originalText;
-                generateZipBtn.disabled = false;
-            }, 2000);
-
-        } catch (error) {
-            console.error('Error generating zip:', error);
-            alert('Error generating zip file. Please try again.');
-            generateZipBtn.textContent = originalText;
-            generateZipBtn.disabled = false;
-        }
     }
 
     // Helper function to convert blob to data URL

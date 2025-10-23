@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static LP Automation Tool</title>
+    <title>LP Automation Tool</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Static LP Automation Tool</h1>
+        <h1 class="text-center mb-4">LP Automation Tool</h1>
         
         <div class="row">
             <div class="col-md-6">
@@ -53,10 +53,22 @@
                             </div>
                         </div>
 
+                        <!-- Additional Elements Upload -->
+                        <div class="mb-3">
+                            <label class="form-label">Additional Elements (Optional)</label>
+                            <div class="upload-area" id="elementUploadArea">
+                                <i class="fas fa-images fa-3x mb-3"></i>
+                                <p>Click or drag element images here</p>
+                                <p><small>You can upload multiple images</small></p>
+                                <input type="file" id="elementInput" accept="image/*" multiple style="display: none;">
+                            </div>
+                            <div id="elementsContainer" class="mt-2"></div>
+                        </div>
+
                         <!-- Title Input -->
                         <div class="mb-3">
                             <label for="titleInput" class="form-label">Page Title</label>
-                            <input type="text" class="form-control" id="titleInput" value="MEGA888" placeholder="Enter page title">
+                            <input type="text" class="form-control" id="titleInput" placeholder="Enter page title">
                         </div>
 
                         <!-- URL Input -->
@@ -93,12 +105,43 @@
                             <small class="form-text text-muted">Current: <span id="widthValue">60</span>%</small>
                         </div>
 
-                        <!-- Generate Button -->
-                        <button class="btn btn-primary w-100" id="generateBtn">Generate Files</button>
-                        
-                        <!-- Generate Zip Button -->
-                        <button class="btn btn-success w-100 mt-2" id="generateZipBtn" style="display: none;">Download ZIP Package</button>
-                        <small class="text-muted mt-1 d-block" id="zipInfo" style="display: none;">
+                        <!-- Extra Button Option -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="extraButtonCheck">
+                                <label class="form-check-label" for="extraButtonCheck">
+                                    Add Extra Button
+                                </label>
+                            </div>
+                            <div id="extraButtonGroup" style="display: none;" class="mt-2">
+                                <label class="form-label">Extra Button Image</label>
+                                <div class="upload-area" id="extraButtonUploadArea" style="padding: 20px;">
+                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                    <p style="margin: 0;">Click or drag extra button image here</p>
+                                    <input type="file" id="extraButtonInput" accept="image/*" style="display: none;">
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonUrl" class="form-label">Extra Button Redirect URL</label>
+                                    <input type="url" class="form-control" id="extraButtonUrl" placeholder="https://example.com">
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonPosition" class="form-label">Extra Button Position (Top %)</label>
+                                    <input type="range" class="form-range" id="extraButtonPosition" min="0" max="100" value="70">
+                                    <small class="form-text text-muted">Current: <span id="extraPositionValue">70</span>%</small>
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonWidth" class="form-label">Extra Button Width (%)</label>
+                                    <input type="range" class="form-range" id="extraButtonWidth" min="20" max="80" value="60">
+                                    <small class="form-text text-muted">Current: <span id="extraWidthValue">60</span>%</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generate and Download Button -->
+                        <button class="btn btn-success w-100" id="generateBtn">
+                            <i class="fas fa-download"></i> Generate & Download ZIP Package
+                        </button>
+                        <small class="text-muted mt-1 d-block">
                             <i class="fas fa-info-circle"></i> ZIP includes both JPG and WebP formats for optimal performance
                         </small>
                     </div>

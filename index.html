@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LP Automation Tool</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,7 +13,22 @@
         <h1 class="text-center mb-4">LP Automation Tool</h1>
         
         <div class="row">
-            <div class="col-md-6">
+            <!-- Guide Preview Column (Left) -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Guide</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="guidePreviewArea">
+                            <p class="text-muted">Upload ZIP with guide folder to see guides</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload & Configure Column -->
+            <div class="col-md-5">
                 <div class="card">
                     <div class="card-header">
                         <h5>Upload & Configure</h5>
@@ -50,6 +66,68 @@
                                 <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
                                 <p>Click or drag button image here</p>
                                 <input type="file" id="buttonInput" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Button Position -->
+                        <div class="mb-3">
+                            <label for="buttonPosition" class="form-label">Button Position (Top %)</label>
+                            <input type="range" class="form-range" id="buttonPosition" min="0" max="100" value="83">
+                            <small class="form-text text-muted">Current: <span id="positionValue">83</span>%</small>
+                        </div>
+
+                        <!-- Button Width -->
+                        <div class="mb-3">
+                            <label for="buttonWidth" class="form-label">Button Width (%)</label>
+                            <input type="range" class="form-range" id="buttonWidth" min="20" max="80" value="60">
+                            <small class="form-text text-muted">Current: <span id="widthValue">60</span>%</small>
+                        </div>
+
+                        <!-- Button Horizontal Position -->
+                        <div class="mb-3">
+                            <label for="buttonHorizontal" class="form-label">Button Horizontal Position (%)</label>
+                            <input type="range" class="form-range" id="buttonHorizontal" min="-50" max="50" value="0">
+                            <small class="form-text text-muted">
+                                <span id="horizontalValue">Center</span>
+                            </small>
+                        </div>
+
+                        <!-- Extra Button Option -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="extraButtonCheck">
+                                <label class="form-check-label" for="extraButtonCheck">
+                                    Add Extra Button
+                                </label>
+                            </div>
+                            <div id="extraButtonGroup" style="display: none;" class="mt-2">
+                                <label class="form-label">Extra Button Image</label>
+                                <div class="upload-area" id="extraButtonUploadArea" style="padding: 20px;">
+                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                    <p style="margin: 0;">Click or drag extra button image here</p>
+                                    <input type="file" id="extraButtonInput" accept="image/*" style="display: none;">
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonUrl" class="form-label">Extra Button Redirect URL</label>
+                                    <input type="url" class="form-control" id="extraButtonUrl" placeholder="https://example.com">
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonPosition" class="form-label">Extra Button Position (Top %)</label>
+                                    <input type="range" class="form-range" id="extraButtonPosition" min="0" max="100" value="70">
+                                    <small class="form-text text-muted">Current: <span id="extraPositionValue">70</span>%</small>
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonWidth" class="form-label">Extra Button Width (%)</label>
+                                    <input type="range" class="form-range" id="extraButtonWidth" min="20" max="80" value="60">
+                                    <small class="form-text text-muted">Current: <span id="extraWidthValue">60</span>%</small>
+                                </div>
+                                <div class="mt-2">
+                                    <label for="extraButtonHorizontal" class="form-label">Extra Button Horizontal Position (%)</label>
+                                    <input type="range" class="form-range" id="extraButtonHorizontal" min="-50" max="50" value="0">
+                                    <small class="form-text text-muted">
+                                        <span id="extraHorizontalValue">Center</span>
+                                    </small>
+                                </div>
                             </div>
                         </div>
 
@@ -91,50 +169,11 @@
                             </div>
                         </div>
 
-                        <!-- Button Position -->
+                        <!-- ZIP Filename -->
                         <div class="mb-3">
-                            <label for="buttonPosition" class="form-label">Button Position (Top %)</label>
-                            <input type="range" class="form-range" id="buttonPosition" min="0" max="100" value="83">
-                            <small class="form-text text-muted">Current: <span id="positionValue">83</span>%</small>
-                        </div>
-
-                        <!-- Button Width -->
-                        <div class="mb-3">
-                            <label for="buttonWidth" class="form-label">Button Width (%)</label>
-                            <input type="range" class="form-range" id="buttonWidth" min="20" max="80" value="60">
-                            <small class="form-text text-muted">Current: <span id="widthValue">60</span>%</small>
-                        </div>
-
-                        <!-- Extra Button Option -->
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="extraButtonCheck">
-                                <label class="form-check-label" for="extraButtonCheck">
-                                    Add Extra Button
-                                </label>
-                            </div>
-                            <div id="extraButtonGroup" style="display: none;" class="mt-2">
-                                <label class="form-label">Extra Button Image</label>
-                                <div class="upload-area" id="extraButtonUploadArea" style="padding: 20px;">
-                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                    <p style="margin: 0;">Click or drag extra button image here</p>
-                                    <input type="file" id="extraButtonInput" accept="image/*" style="display: none;">
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonUrl" class="form-label">Extra Button Redirect URL</label>
-                                    <input type="url" class="form-control" id="extraButtonUrl" placeholder="https://example.com">
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonPosition" class="form-label">Extra Button Position (Top %)</label>
-                                    <input type="range" class="form-range" id="extraButtonPosition" min="0" max="100" value="70">
-                                    <small class="form-text text-muted">Current: <span id="extraPositionValue">70</span>%</small>
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonWidth" class="form-label">Extra Button Width (%)</label>
-                                    <input type="range" class="form-range" id="extraButtonWidth" min="20" max="80" value="60">
-                                    <small class="form-text text-muted">Current: <span id="extraWidthValue">60</span>%</small>
-                                </div>
-                            </div>
+                            <label for="zipFilename" class="form-label">ZIP Filename</label>
+                            <input type="text" class="form-control" id="zipFilename" placeholder="my-landing-page" value="landing-page-package">
+                            <small class="form-text text-muted">Customize the name of the downloaded ZIP file (without .zip extension)</small>
                         </div>
 
                         <!-- Generate and Download Button -->
@@ -148,7 +187,8 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <!-- Preview Column (Right) -->
+            <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
                         <h5>Preview</h5>

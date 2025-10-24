@@ -5,10 +5,12 @@
   "main": "src/js/main.js",
   "scripts": {
     "start": "live-server src",
-    "build": "echo 'Build step can be added here'"
+    "build": "echo 'Build step can be added here'",
+    "analyze": "node js/analyze-button-position.js"
   },
   "dependencies": {
-    "live-server": "^1.2.1"
+    "live-server": "^1.2.1",
+    "sharp": "^0.33.0"
   },
   "author": "",
   "license": "ISC"

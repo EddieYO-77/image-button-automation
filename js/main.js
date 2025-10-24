@@ -511,8 +511,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const baseName = filename.split('/').pop().toLowerCase();
                 if (baseName.startsWith('._')) continue; // Ignore macOS resource fork files
                 
-                // Check for guide folder
-                if (lowerFilename.includes('guide/') || lowerFilename.includes('guide\\')) {
+                // Check for guide or guideline folder
+                if (lowerFilename.includes('guide/') || lowerFilename.includes('guide\\') ||
+                    lowerFilename.includes('guideline/') || lowerFilename.includes('guideline\\')) {
                     const ext = baseName.split('.').pop();
                     if (['jpg', 'jpeg', 'png', 'mp4'].includes(ext)) {
                         guideFilesTemp.push({ file: zipEntry, name: filename, baseName: baseName });
@@ -551,8 +552,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const baseName = parts[parts.length - 1].toLowerCase();
                         if (baseName.startsWith('._')) continue;
                         
-                        // Skip guide folder processing in second pass (already handled in first pass)
-                        if (folderName.includes('guide') || parts.some(p => p.toLowerCase() === 'guide')) {
+                        // Skip guide or guideline folder processing in second pass (already handled in first pass)
+                        if (folderName.includes('guide') || parts.some(p => p.toLowerCase().includes('guide'))) {
                             continue;
                         }
                         

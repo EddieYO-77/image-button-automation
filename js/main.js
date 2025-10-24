@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (lowerFilename.includes('guide/') || lowerFilename.includes('guide\\') ||
                     lowerFilename.includes('guideline/') || lowerFilename.includes('guideline\\')) {
                     const ext = baseName.split('.').pop();
-                    if (['jpg', 'jpeg', 'png', 'mp4'].includes(ext)) {
+                    if (['jpg', 'jpeg', 'png', 'gif', 'mp4'].includes(ext)) {
                         guideFilesTemp.push({ file: zipEntry, name: filename, baseName: baseName });
                     }
                     continue; // Skip other processing for guide files
@@ -703,6 +703,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <small class="text-muted">${file.name}${additionalFiles.length > 0 ? ` (+${additionalFiles.length} element${additionalFiles.length > 1 ? 's' : ''})` : ''}${guideFiles.length > 0 ? ` (+${guideFiles.length} guide file${guideFiles.length > 1 ? 's' : ''})` : ''}</small>
             `;
 
+            // Auto-detect button position if guide image exists
+            if (guideFiles.length > 0 && uploadedImage && uploadedButton) {
+                await autoDetectButtonPosition(guideFiles);
+            }
+
             // Update preview
             updatePreview();
 
@@ -752,6 +757,88 @@ document.addEventListener('DOMContentLoaded', function() {
         
         guideHTML += '</div>';
         guideContainer.innerHTML = guideHTML;
+    }
+
+    async function autoDetectButtonPosition(guideFiles) {
+        try {
+            // Find the first image guide file (not video)
+            const guideImageFile = guideFiles.find(file => file.type === 'image');
+            
+            if (!guideImageFile) {
+                console.log('No image guide file found, skipping auto-detection');
+                return;
+            }
+
+            console.log('Auto-detecting button position from guide image:', guideImageFile.name);
+            
+            // Show analysis status
+            const statusElement = document.createElement('div');
+            statusElement.className = 'alert alert-info mt-3';
+            statusElement.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Analyzing...</span>
+                    </div>
+                    <span>Analyzing guide image to detect button position...</span>
+                </div>
+            `;
+            zipUploadArea.appendChild(statusElement);
+
+            // Perform analysis with button image for template matching (more accurate)
+            const result = await analyzeButtonPositionBrowser(
+                guideImageFile.url,  // Guide image (complete design)
+                uploadedImage,        // Background image (for fallback)
+                uploadedButton        // Button image (for template matching)
+            );
+            
+            console.log('Analysis result:', result);
+            
+            // Update sliders with detected values
+            if (result.confidence > 30) { // Only apply if confidence is reasonable
+                buttonPosition.value = result.top;
+                positionValue.textContent = result.top;
+                
+                buttonWidth.value = result.width;
+                widthValue.textContent = result.width;
+                
+                buttonHorizontal.value = result.horizontal;
+                const value = parseInt(result.horizontal);
+                if (value === 0) {
+                    horizontalValue.textContent = 'Center';
+                } else if (value < 0) {
+                    horizontalValue.textContent = `${Math.abs(value)}% from Right`;
+                } else {
+                    horizontalValue.textContent = `${value}% from Left`;
+                }
+                
+                // Update status to show success
+                statusElement.className = 'alert alert-success mt-3';
+                
+                statusElement.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Button position detected!</strong>
+                    <small class="d-block mt-1">
+                        Top: ${result.top}% | Width: ${result.width}% | Confidence: ${result.confidence}%
+                    </small>
+                    <small class="text-muted d-block mt-1">You can adjust these values using the sliders above</small>
+                `;
+                
+                // Update preview with new values
+                updatePreview();
+            } else {
+                // Low confidence, show warning
+                statusElement.className = 'alert alert-warning mt-3';
+                statusElement.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Could not reliably detect button position</strong>
+                    <small class="d-block mt-1">Please adjust the button position manually using the sliders above</small>
+                `;
+            }
+
+        } catch (error) {
+            console.error('Error in auto-detection:', error);
+            // Don't show error to user, just log it
+        }
     }
 
     function handleBackgroundUpload(e) {
@@ -987,30 +1074,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function generateAndDownloadZip() {
-        if (!uploadedImage) {
-            alert('Please upload a background image first');
-            return;
-        }
-
-        if (!uploadedButton) {
-            alert('Please upload a button image first');
-            return;
-        }
-
+        // Check if user wants redirect-only mode (no images)
+        const redirectOnlyMode = !uploadedImage && !uploadedButton;
+        
         if (!urlInput.value) {
             alert('Please enter a redirect URL');
             return;
         }
 
-        // Validate extra button if enabled
-        if (extraButtonCheck.checked) {
-            if (!uploadedExtraButton) {
-                alert('Please upload an extra button image or uncheck the extra button option');
+        if (!redirectOnlyMode) {
+            // Normal mode - validate images
+            if (!uploadedImage) {
+                alert('Please upload a background image first');
                 return;
             }
-            if (!extraButtonUrl.value) {
-                alert('Please enter a redirect URL for the extra button');
+
+            if (!uploadedButton) {
+                alert('Please upload a button image first');
                 return;
+            }
+
+            // Validate extra button if enabled
+            if (extraButtonCheck.checked) {
+                if (!uploadedExtraButton) {
+                    alert('Please upload an extra button image or uncheck the extra button option');
+                    return;
+                }
+                if (!extraButtonUrl.value) {
+                    alert('Please enter a redirect URL for the extra button');
+                    return;
+                }
             }
         }
 
@@ -1040,27 +1133,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Generate all required files
-            const generatedFiles = {
-                'Lindex.html': generateMainHTML(title, position, width, horizontal, './assets/load.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra.html'),
-                'L1.html': generateMainHTML(title, position, width, horizontal, './assets/load1.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra1.html'),
-                'L2.html': generateMainHTML(title, position, width, horizontal, './assets/load2.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra2.html'),
-                'L3.html': generateMainHTML(title, position, width, horizontal, './assets/load3.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra3.html'),
-                'L4.html': generateMainHTML(title, position, width, horizontal, './assets/load4.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra4.html'),
-                'assets/load.html': generateLoadHTML(redirectUrl),
-                'assets/load1.html': generateLoadHTML(redirectUrl),
-                'assets/load2.html': generateLoadHTML(redirectUrl),
-                'assets/load3.html': generateLoadHTML(redirectUrl),
-                'assets/load4.html': generateLoadHTML(redirectUrl),
-                'css/style.css': generateStyleCSS(position, width, horizontal, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal),
-            };
+            let generatedFiles = {};
+            
+            if (redirectOnlyMode) {
+                // Redirect-only mode: Generate simple HTML files
+                generatedFiles = {
+                    'Lindex.html': generateRedirectOnlyHTML(title, './assets/load.html'),
+                    'L1.html': generateRedirectOnlyHTML(title, './assets/load1.html'),
+                    'L2.html': generateRedirectOnlyHTML(title, './assets/load2.html'),
+                    'L3.html': generateRedirectOnlyHTML(title, './assets/load3.html'),
+                    'L4.html': generateRedirectOnlyHTML(title, './assets/load4.html'),
+                    'assets/load.html': generateLoadHTML(redirectUrl),
+                    'assets/load1.html': generateLoadHTML(redirectUrl),
+                    'assets/load2.html': generateLoadHTML(redirectUrl),
+                    'assets/load3.html': generateLoadHTML(redirectUrl),
+                    'assets/load4.html': generateLoadHTML(redirectUrl),
+                };
+            } else {
+                // Normal mode: Generate full landing page files
+                generatedFiles = {
+                    'Lindex.html': generateMainHTML(title, position, width, horizontal, './assets/load.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra.html'),
+                    'L1.html': generateMainHTML(title, position, width, horizontal, './assets/load1.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra1.html'),
+                    'L2.html': generateMainHTML(title, position, width, horizontal, './assets/load2.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra2.html'),
+                    'L3.html': generateMainHTML(title, position, width, horizontal, './assets/load3.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra3.html'),
+                    'L4.html': generateMainHTML(title, position, width, horizontal, './assets/load4.html', pixelId, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal, './assets/loadExtra4.html'),
+                    'assets/load.html': generateLoadHTML(redirectUrl),
+                    'assets/load1.html': generateLoadHTML(redirectUrl),
+                    'assets/load2.html': generateLoadHTML(redirectUrl),
+                    'assets/load3.html': generateLoadHTML(redirectUrl),
+                    'assets/load4.html': generateLoadHTML(redirectUrl),
+                    'css/style.css': generateStyleCSS(position, width, horizontal, extraButtonEnabled, extraPosition, extraWidth, extraHorizontal),
+                };
 
-            // Add extra button load files if enabled
-            if (extraButtonEnabled) {
-                generatedFiles['assets/loadExtra.html'] = generateLoadHTML(extraRedirectUrl);
-                generatedFiles['assets/loadExtra1.html'] = generateLoadHTML(extraRedirectUrl);
-                generatedFiles['assets/loadExtra2.html'] = generateLoadHTML(extraRedirectUrl);
-                generatedFiles['assets/loadExtra3.html'] = generateLoadHTML(extraRedirectUrl);
-                generatedFiles['assets/loadExtra4.html'] = generateLoadHTML(extraRedirectUrl);
+                // Add extra button load files if enabled
+                if (extraButtonEnabled) {
+                    generatedFiles['assets/loadExtra.html'] = generateLoadHTML(extraRedirectUrl);
+                    generatedFiles['assets/loadExtra1.html'] = generateLoadHTML(extraRedirectUrl);
+                    generatedFiles['assets/loadExtra2.html'] = generateLoadHTML(extraRedirectUrl);
+                    generatedFiles['assets/loadExtra3.html'] = generateLoadHTML(extraRedirectUrl);
+                    generatedFiles['assets/loadExtra4.html'] = generateLoadHTML(extraRedirectUrl);
+                }
             }
 
             // Create ZIP package
@@ -1090,8 +1202,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 assetsFolder.file('loadExtra4.html', generatedFiles['assets/loadExtra4.html']);
             }
 
-            // Add image folder
-            const imageFolder = zip.folder('image');
+            // Add images and CSS only in normal mode
+            if (!redirectOnlyMode) {
+                // Add image folder
+                const imageFolder = zip.folder('image');
             
             // Convert base64 images to blobs and add to zip
             if (uploadedImage) {
@@ -1157,9 +1271,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Add CSS folder
-            const cssFolder = zip.folder('css');
-            cssFolder.file('style.css', generatedFiles['css/style.css']);
+                // Add CSS folder
+                const cssFolder = zip.folder('css');
+                cssFolder.file('style.css', generatedFiles['css/style.css']);
+            }
 
             // Generate and download zip
             const content = await zip.generateAsync({ type: 'blob' });
@@ -1236,6 +1351,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         return scripts;
+    }
+
+    function generateRedirectOnlyHTML(title, loadPath) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width,initial-scale=1" name="viewport">
+  <meta name="description" content="">
+  <title>${title}</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${loadPath}";
+  </script>
+</body>
+</html>`;
     }
 
     function generateMainHTML(title, position, width, horizontal, loadPath, fbPixelId = '', extraButtonEnabled = false, extraPosition = 70, extraWidth = 60, extraHorizontal = 0, extraLoadPath = '') {

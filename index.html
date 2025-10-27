@@ -3,199 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LP Automation Tool</title>
+    <title>LP -> HTML Tool</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">LP Automation Tool</h1>
-        
-        <div class="row">
-            <!-- Guide Preview Column (Left) -->
-            <div class="col-md-3">
-                <div class="card">
+    <div class="container-fluid px-4 py-4">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 style="color: #1e293b; font-weight: 700; font-size: 2.5rem; text-shadow: 0 2px 20px rgba(255, 255, 255, 0.8), 0 4px 40px rgba(255, 255, 255, 0.6);">
+                <i class="fas fa-magic" style="color: #2563eb;"></i> LP -> HTML Tool
+            </h1>
+            <p class="text-muted" style="font-size: 1.1rem; text-shadow: 0 2px 10px rgba(255, 255, 255, 0.7);">Create stunning landing pages with AI-powered button detection</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Sidebar - Guide & Preview -->
+            <div class="col-lg-3">
+                <!-- Guide Section -->
+                <div class="card mb-4 sticky-sidebar">
                     <div class="card-header">
-                        <h5>Guide</h5>
+                        <h5><i class="fas fa-compass"></i> Guide Files</h5>
                     </div>
                     <div class="card-body">
                         <div id="guidePreviewArea">
-                            <p class="text-muted">Upload ZIP with guide folder to see guides</p>
+                            <div class="text-center py-4">
+                                <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                                <p class="text-muted small">Upload ZIP with guide folder to see reference designs</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Upload & Configure Column -->
-            <div class="col-md-5">
+            <!-- Main Content Area -->
+            <div class="col-lg-6">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Upload & Configure</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-cogs"></i> Configuration</h5>
+                        <button class="btn btn-outline-secondary btn-sm" id="clearAllBtn" title="Clear all settings and files">
+                            <i class="fas fa-trash-alt"></i> Clear All
+                        </button>
                     </div>
                     <div class="card-body">
-                        <!-- Zip File Upload Option -->
-                        <div class="mb-3">
-                            <label class="form-label">Quick Upload (Optional)</label>
-                            <div class="upload-area" id="zipUploadArea">
-                                <i class="fas fa-file-archive fa-3x mb-3"></i>
-                                <p>Upload ZIP file containing bg and btn images</p>
-                                <input type="file" id="zipInput" accept=".zip" style="display: none;">
+                        
+                        <!-- Step 1: Upload Files -->
+                        <div class="config-section mb-4">
+                            <div class="section-header mb-3">
+                                <span class="step-badge">1</span>
+                                <h6 class="d-inline ms-2 mb-0">Upload Files</h6>
                             </div>
-                            <small class="text-muted">ZIP should contain bg.jpg/png and btn.jpg/png</small>
-                        </div>
 
-                        <div class="text-center my-3">
-                            <span class="text-muted">- OR -</span>
-                        </div>
+                            <!-- Quick ZIP Upload -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold"><i class="fas fa-bolt text-warning"></i> Quick Upload (Recommended)</label>
+                                <div class="upload-area upload-area-featured" id="zipUploadArea">
+                                    <i class="fas fa-file-archive fa-3x mb-2 text-primary"></i>
+                                    <p class="mb-1 fw-bold">Drop your ZIP file here</p>
+                                    <small class="text-muted">Contains bg, btn, and optional guide folder</small>
+                                    <input type="file" id="zipInput" accept=".zip" style="display: none;">
+                                </div>
+                            </div>
 
-                        <!-- Background Image Upload -->
-                        <div class="mb-3">
-                            <label class="form-label">Background Image</label>
-                            <div class="upload-area" id="uploadArea">
-                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-                                <p>Click or drag background image here</p>
-                                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                            <div class="text-center my-3">
+                                <span class="badge bg-secondary px-3 py-1">OR UPLOAD INDIVIDUALLY</span>
+                            </div>
+
+                            <!-- Manual Uploads -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"><i class="fas fa-image"></i> Background</label>
+                                    <div class="upload-area upload-area-compact" id="uploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                        <p class="small mb-0">Drop background</p>
+                                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"><i class="fas fa-mouse-pointer"></i> Button</label>
+                                    <div class="upload-area upload-area-compact" id="buttonUploadArea">
+                                        <i class="fas fa-hand-pointer fa-2x mb-2"></i>
+                                        <p class="small mb-0">Drop button</p>
+                                        <input type="file" id="buttonInput" accept="image/*" style="display: none;">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Button Image Upload -->
-                        <div class="mb-3">
-                            <label class="form-label">Button Image</label>
-                            <div class="upload-area" id="buttonUploadArea">
-                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-                                <p>Click or drag button image here</p>
-                                <input type="file" id="buttonInput" accept="image/*" style="display: none;">
+                        <hr class="my-4">
+
+                        <!-- Step 2: Position & Style -->
+                        <div class="config-section mb-4">
+                            <div class="section-header mb-3">
+                                <span class="step-badge">2</span>
+                                <h6 class="d-inline ms-2 mb-0">Button Position & Style</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="buttonPosition" class="form-label"><i class="fas fa-arrows-alt-v"></i> Vertical Position</label>
+                                    <input type="range" class="form-range" id="buttonPosition" min="0" max="100" value="83">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">Top</small>
+                                        <small class="text-primary fw-bold"><span id="positionValue">83</span>%</small>
+                                        <small class="text-muted">Bottom</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="buttonWidth" class="form-label"><i class="fas fa-arrows-alt-h"></i> Button Width</label>
+                                    <input type="range" class="form-range" id="buttonWidth" min="20" max="80" value="60">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">Small</small>
+                                        <small class="text-primary fw-bold"><span id="widthValue">60</span>%</small>
+                                        <small class="text-muted">Large</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="buttonHorizontal" class="form-label"><i class="fas fa-align-center"></i> Horizontal Align</label>
+                                    <input type="range" class="form-range" id="buttonHorizontal" min="-50" max="50" value="0">
+                                    <div class="text-center">
+                                        <small class="text-primary fw-bold"><span id="horizontalValue">Center</span></small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="animationSpeed" class="form-label"><i class="fas fa-clock"></i> Animation Speed</label>
+                                    <input type="range" class="form-range" id="animationSpeed" min="0.3" max="5.0" step="0.1" value="0.9">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">Fast</small>
+                                        <small class="text-primary fw-bold"><span id="animationSpeedValue">0.9</span>s</small>
+                                        <small class="text-muted">Slow</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="buttonZIndex" class="form-label"><i class="fas fa-layer-group"></i> Button Layer (Z-Index)</label>
+                                    <input type="range" class="form-range" id="buttonZIndex" min="1" max="100" value="10">
+                                    <div class="text-center">
+                                        <small class="text-primary fw-bold"><span id="buttonZIndexValue">10</span></small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Button Position -->
-                        <div class="mb-3">
-                            <label for="buttonPosition" class="form-label">Button Position (Top %)</label>
-                            <input type="range" class="form-range" id="buttonPosition" min="0" max="100" value="83">
-                            <small class="form-text text-muted">Current: <span id="positionValue">83</span>%</small>
+                        <hr class="my-4">
+
+                        <!-- Step 3: Advanced Options -->
+                        <div class="config-section mb-4">
+                            <div class="section-header mb-3">
+                                <span class="step-badge">3</span>
+                                <h6 class="d-inline ms-2 mb-0">Advanced Options</h6>
+                            </div>
+
+                            <!-- Extra Button -->
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="extraButtonCheck">
+                                    <label class="form-check-label fw-semibold" for="extraButtonCheck"><p>Enable 2nd Button</p>
+                                    </label>
+                                </div>
+                                
+                                <div id="extraButtonGroup" style="display: none;" class="mt-3 p-3 bg-light rounded">
+                                    <div class="mb-3">
+                                        <label class="form-label">Button Image</label>
+                                        <div class="upload-area upload-area-compact" id="extraButtonUploadArea">
+                                            <i class="fas fa-cloud-upload-alt fa-2x mb-1"></i>
+                                            <p class="small mb-0">Drop extra button</p>
+                                            <input type="file" id="extraButtonInput" accept="image/*" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="extraButtonUrl" class="form-label">Redirect URL</label>
+                                        <input type="url" class="form-control" id="extraButtonUrl" placeholder="https://example.com">
+                                    </div>
+
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label for="extraButtonPosition" class="form-label small">Position</label>
+                                            <input type="range" class="form-range" id="extraButtonPosition" min="0" max="100" value="70">
+                                            <small class="text-muted"><span id="extraPositionValue">70</span>%</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="extraButtonWidth" class="form-label small">Width</label>
+                                            <input type="range" class="form-range" id="extraButtonWidth" min="20" max="80" value="60">
+                                            <small class="text-muted"><span id="extraWidthValue">60</span>%</small>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="extraButtonHorizontal" class="form-label small">Horizontal</label>
+                                            <input type="range" class="form-range" id="extraButtonHorizontal" min="-50" max="50" value="0">
+                                            <small class="text-muted"><span id="extraHorizontalValue">Center</span></small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="extraAnimationSpeed" class="form-label small">Animation Speed</label>
+                                            <input type="range" class="form-range" id="extraAnimationSpeed" min="0.3" max="5.0" step="0.1" value="0.9">
+                                            <small class="text-muted"><span id="extraAnimationSpeedValue">0.9</span>s</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="extraButtonZIndex" class="form-label small">Button Layer (Z-Index)</label>
+                                            <input type="range" class="form-range" id="extraButtonZIndex" min="1" max="100" value="10">
+                                            <small class="text-muted"><span id="extraButtonZIndexValue">10</span></small>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="extraButtonDisableAnimation">
+                                                <label class="form-check-label small" for="extraButtonDisableAnimation">Disable Animation</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Third Button -->
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="thirdButtonCheck">
+                                    <label class="form-check-label fw-semibold" for="thirdButtonCheck"><p>Enable 3rd Button</p>
+                                    </label>
+                                </div>
+                                
+                                <div id="thirdButtonGroup" style="display: none;" class="mt-3 p-3 bg-light rounded">
+                                    <div class="mb-3">
+                                        <label class="form-label">Button Image</label>
+                                        <div class="upload-area upload-area-compact" id="thirdButtonUploadArea">
+                                            <i class="fas fa-cloud-upload-alt fa-2x mb-1"></i>
+                                            <p class="small mb-0">Drop third button</p>
+                                            <input type="file" id="thirdButtonInput" accept="image/*" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="thirdButtonUrl" class="form-label">Redirect URL</label>
+                                        <input type="url" class="form-control" id="thirdButtonUrl" placeholder="https://example.com">
+                                    </div>
+
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label for="thirdButtonPosition" class="form-label small">Position</label>
+                                            <input type="range" class="form-range" id="thirdButtonPosition" min="0" max="100" value="60">
+                                            <small class="text-muted"><span id="thirdPositionValue">60</span>%</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="thirdButtonWidth" class="form-label small">Width</label>
+                                            <input type="range" class="form-range" id="thirdButtonWidth" min="20" max="80" value="60">
+                                            <small class="text-muted"><span id="thirdWidthValue">60</span>%</small>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="thirdButtonHorizontal" class="form-label small">Horizontal</label>
+                                            <input type="range" class="form-range" id="thirdButtonHorizontal" min="-50" max="50" value="0">
+                                            <small class="text-muted"><span id="thirdHorizontalValue">Center</span></small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="thirdAnimationSpeed" class="form-label small">Animation Speed</label>
+                                            <input type="range" class="form-range" id="thirdAnimationSpeed" min="0.3" max="5.0" step="0.1" value="0.9">
+                                            <small class="text-muted"><span id="thirdAnimationSpeedValue">0.9</span>s</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="thirdButtonZIndex" class="form-label small">Button Layer (Z-Index)</label>
+                                            <input type="range" class="form-range" id="thirdButtonZIndex" min="1" max="100" value="10">
+                                            <small class="text-muted"><span id="thirdButtonZIndexValue">10</span></small>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="thirdButtonDisableAnimation">
+                                                <label class="form-check-label small" for="thirdButtonDisableAnimation">Disable Animation</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Elements -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold"><i class="fas fa-layer-group"></i> Decorative Elements</label>
+                                <div class="upload-area upload-area-compact" id="elementUploadArea">
+                                    <i class="fas fa-images fa-2x mb-1"></i>
+                                    <p class="small mb-0">Drop additional images (optional)</p>
+                                    <input type="file" id="elementInput" accept="image/*" multiple style="display: none;">
+                                </div>
+                                <div id="elementsContainer" class="mt-2"></div>
+                            </div>
                         </div>
 
-                        <!-- Button Width -->
-                        <div class="mb-3">
-                            <label for="buttonWidth" class="form-label">Button Width (%)</label>
-                            <input type="range" class="form-range" id="buttonWidth" min="20" max="80" value="60">
-                            <small class="form-text text-muted">Current: <span id="widthValue">60</span>%</small>
+                        <hr class="my-4">
+
+                        <!-- Step 4: Final Settings -->
+                        <div class="config-section mb-4">
+                            <div class="section-header mb-3">
+                                <span class="step-badge">4</span>
+                                <h6 class="d-inline ms-2 mb-0">Final Settings</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="titleInput" class="form-label"><i class="fas fa-heading"></i> Page Title</label>
+                                    <input type="text" class="form-control" id="titleInput" placeholder="My Landing Page">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="zipFilename" class="form-label"><i class="fas fa-file-archive"></i> ZIP Filename</label>
+                                    <input type="text" class="form-control" id="zipFilename" placeholder="landing-page" value="landing-page-package">
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="urlInput" class="form-label"><i class="fas fa-link"></i> Redirect URL</label>
+                                    <input type="url" class="form-control" id="urlInput" placeholder="https://example.com" required>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="fbPixelCheck">
+                                        <label class="form-check-label" for="fbPixelCheck">
+                                            <i class="fab fa-facebook"></i> Enable Facebook Pixel
+                                        </label>
+                                    </div>
+                                    <div id="fbPixelInputGroup" style="display: none;" class="mt-2">
+                                        <input type="text" class="form-control" id="fbPixelId" placeholder="Enter Facebook Pixel ID">
+                                        <small class="form-text text-muted">Add tracking code to all pages</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Button Horizontal Position -->
-                        <div class="mb-3">
-                            <label for="buttonHorizontal" class="form-label">Button Horizontal Position (%)</label>
-                            <input type="range" class="form-range" id="buttonHorizontal" min="-50" max="50" value="0">
-                            <small class="form-text text-muted">
-                                <span id="horizontalValue">Center</span>
+                        <!-- Generate Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-success btn-lg" id="generateBtn" style="font-size: 1.1rem; padding: 1rem;">
+                                <i class="fas fa-download me-2"></i> Generate & Download Package
+                            </button>
+                            <small class="text-center text-muted">
+                                <i class="fas fa-info-circle"></i> Includes JPG & WebP formats for optimal performance
                             </small>
                         </div>
 
-                        <!-- Extra Button Option -->
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="extraButtonCheck">
-                                <label class="form-check-label" for="extraButtonCheck">
-                                    Add Extra Button
-                                </label>
-                            </div>
-                            <div id="extraButtonGroup" style="display: none;" class="mt-2">
-                                <label class="form-label">Extra Button Image</label>
-                                <div class="upload-area" id="extraButtonUploadArea" style="padding: 20px;">
-                                    <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                    <p style="margin: 0;">Click or drag extra button image here</p>
-                                    <input type="file" id="extraButtonInput" accept="image/*" style="display: none;">
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonUrl" class="form-label">Extra Button Redirect URL</label>
-                                    <input type="url" class="form-control" id="extraButtonUrl" placeholder="https://example.com">
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonPosition" class="form-label">Extra Button Position (Top %)</label>
-                                    <input type="range" class="form-range" id="extraButtonPosition" min="0" max="100" value="70">
-                                    <small class="form-text text-muted">Current: <span id="extraPositionValue">70</span>%</small>
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonWidth" class="form-label">Extra Button Width (%)</label>
-                                    <input type="range" class="form-range" id="extraButtonWidth" min="20" max="80" value="60">
-                                    <small class="form-text text-muted">Current: <span id="extraWidthValue">60</span>%</small>
-                                </div>
-                                <div class="mt-2">
-                                    <label for="extraButtonHorizontal" class="form-label">Extra Button Horizontal Position (%)</label>
-                                    <input type="range" class="form-range" id="extraButtonHorizontal" min="-50" max="50" value="0">
-                                    <small class="form-text text-muted">
-                                        <span id="extraHorizontalValue">Center</span>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Elements Upload -->
-                        <div class="mb-3">
-                            <label class="form-label">Additional Elements (Optional)</label>
-                            <div class="upload-area" id="elementUploadArea">
-                                <i class="fas fa-images fa-3x mb-3"></i>
-                                <p>Click or drag element images here</p>
-                                <p><small>You can upload multiple images</small></p>
-                                <input type="file" id="elementInput" accept="image/*" multiple style="display: none;">
-                            </div>
-                            <div id="elementsContainer" class="mt-2"></div>
-                        </div>
-
-                        <!-- Title Input -->
-                        <div class="mb-3">
-                            <label for="titleInput" class="form-label">Page Title</label>
-                            <input type="text" class="form-control" id="titleInput" placeholder="Enter page title">
-                        </div>
-
-                        <!-- URL Input -->
-                        <div class="mb-3">
-                            <label for="urlInput" class="form-label">Redirect URL</label>
-                            <input type="url" class="form-control" id="urlInput" placeholder="https://example.com" required>
-                        </div>
-
-                        <!-- Facebook Pixel -->
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="fbPixelCheck">
-                                <label class="form-check-label" for="fbPixelCheck">
-                                    Add Facebook Pixel
-                                </label>
-                            </div>
-                            <div id="fbPixelInputGroup" style="display: none;" class="mt-2">
-                                <input type="text" class="form-control" id="fbPixelId" placeholder="Enter Facebook Pixel ID (e.g., 123456789012345)">
-                                <small class="form-text text-muted">This will add Facebook Pixel tracking code to your pages</small>
-                            </div>
-                        </div>
-
-                        <!-- ZIP Filename -->
-                        <div class="mb-3">
-                            <label for="zipFilename" class="form-label">ZIP Filename</label>
-                            <input type="text" class="form-control" id="zipFilename" placeholder="my-landing-page" value="landing-page-package">
-                            <small class="form-text text-muted">Customize the name of the downloaded ZIP file (without .zip extension)</small>
-                        </div>
-
-                        <!-- Generate and Download Button -->
-                        <button class="btn btn-success w-100" id="generateBtn">
-                            <i class="fas fa-download"></i> Generate & Download ZIP Package
-                        </button>
-                        <small class="text-muted mt-1 d-block">
-                            <i class="fas fa-info-circle"></i> ZIP includes both JPG and WebP formats for optimal performance
-                        </small>
                     </div>
                 </div>
             </div>
 
-            <!-- Preview Column (Right) -->
-            <div class="col-md-4">
-                <div class="card">
+            <!-- Right Sidebar - Live Preview -->
+            <div class="col-lg-3">
+                <div class="card sticky-sidebar">
                     <div class="card-header">
-                        <h5>Preview</h5>
+                        <h5><i class="fas fa-eye"></i> Live Preview</h5>
                     </div>
                     <div class="card-body">
                         <div id="previewArea" class="text-center">
-                            <p class="text-muted">Upload an image to see preview</p>
+                            <div class="py-4">
+                                <i class="fas fa-desktop fa-3x text-muted mb-3"></i>
+                                <p class="text-muted small">Preview appears here after uploading images</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -206,6 +364,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="js/analyze-button.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Using modular version with ES6 modules -->
+    <script type="module" src="js/main-modular.js"></script>
 </body>
 </html>
